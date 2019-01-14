@@ -1,0 +1,16 @@
+version: "3.6"
+
+services:
+
+  tml:
+    build: .
+    restart: always
+    expose:
+      - 4000
+    volumes:
+      - ./app:/home/app
+      - /etc/localtime:/etc/localtime:ro
+    working_dir: /home/app
+    command: [ "npm", "start" ]
+    environment:
+      - DEBUG=*

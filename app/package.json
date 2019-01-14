@@ -1,0 +1,17 @@
+{
+  "name": "tml-on-the-web",
+  "version": "1.0.0",
+  "description": "TML on the Web",
+  "main": "index.js",
+  "scripts": {
+    "start": "./node_modules/.bin/nodemon -w ."
+  },
+  "author": "Tomáš Klapka <tomas@klapka.cz>",
+  "license": "Public domain",
+  "private": true,
+  "dependencies": {
+    "express": "^4.16.4",
+    "morgan": "^1.9.1",
+    "nodemon": "^1.18.9"
+  }
+}

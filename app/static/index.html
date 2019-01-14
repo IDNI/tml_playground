@@ -1,0 +1,116 @@
+<html>
+  <head>
+      <link rel="icon" href="data:,">
+  <style>
+    textarea#logic_program {
+      width: 60em;
+      height: 15em;
+    }
+    .lp_button span {
+      border: 1px solid black;
+      padding: 0.1em 0.4em;
+    }
+    span.xx-small {
+      font-size: xx-small;
+    }
+    p.note {
+      font-size: xx-small;
+    }
+  </style>
+  </head>
+  <body onload="test(1)">
+    <h1>TML playground</h1>
+    <p class="note">see <a href="https://github.com/idni/tau/">https://github.com/idni/tau/</a> for more info <span id="commit"></span></p>
+    <p class="lp_button">Logic programs to try:
+      <span onclick="test(1)">1</span>
+      <span onclick="test(2)">2</span>
+      <span onclick="test(3)">transitive closure</span>
+      <span onclick="test(4)">4</span>
+      <span onclick="test(5)">5</span>
+      <span onclick="test(6)">family</span>
+      <span onclick="test(7)">who can fly?</span>
+    </p>
+    <p>
+      <textarea id="logic_program"></textarea>
+    </p>
+    <p>
+      <button onclick="tml()">RUN</button>
+    </p>
+    <p>
+      Result:<br/>
+      <pre id="output"></pre>
+    </p>
+    <script>
+      function tml() {
+        document.getElementById('output').innerText = 'processing...';
+        const lp = document.getElementById('logic_program').value;
+        let status = null;
+        let commit = null;
+        fetch('/tml', {
+          method: 'post',
+          body: lp
+        })
+        .then(function (response) {
+          status = response.status;
+          commit = response.headers.get('Tau-commit');
+          return response.text();
+        })
+        .then(function (text) {
+          if (status != 500) {
+            document.getElementById('commit').innerHTML = `(commit: <a href="https://github.com/IDNI/tau/tree/${commit}">${commit}</a>)`;
+          } else {
+            text = `Error: ` + JSON.parse(text).error;
+          }
+          document.getElementById('output').innerText = text;
+        })
+        .catch(function (error) {
+          console.log('error:', error);
+        })
+      }
+      function test(n) {
+        test_programs = [
+        `# 1 - pairs\n\n1 2.\n?y ?x :- ?x ?y.\n3 ?x :- 2 ?x.`,
+        `# 2 - yes, you can use strings :)\n\na a.\nb b.\na 2.\nb ?x :- a ?x.`,
+        `# 3 - transitive closure\n\ne 1 2.\ne 2 3.\ne 3 4.\ne 4 5.\ne 5 1.\nt ?x ?y :- e ?x ?y.\nt ?x ?y :- t ?x ?z, e ?z ?y.`,
+        `# 4 - padding\n\n1 2.\n1 2 3.\n?y ?x :- ?x ?y.\n3 ?x :- 2 ?x.\n4 ?y ?x :- 2 ?x ?y.\n5 ?y ?x :- 1 ?x ?y.`,
+        `# 5 - more padding\n\n1 1.\n1 2.\n?x :- ?x ?x.`,
+        `# 6 - family (example from Datalog Educational System http://des.sourceforge.net/)\n
+father tom amy.
+father jack fred.
+father tony carolII.
+father fred carolIII.
+
+mother grace amy.
+mother amy fred.
+mother carolI carolII.
+mother carolII carolIII.
+
+parent ?X ?Y :- father ?X ?Y.
+parent ?X ?Y :- mother ?X ?Y.
+
+ancestor ?X ?Y :- parent ?X ?Y.
+ancestor ?X ?Y :- parent ?X ?Z, ancestor ?Z ?Y.
+`,
+        `# 7 - who can fly? (read '~' as 'not') - negation does not work yet\n
+canfly ?X :- bird ?X, ~ wounded ?X.
+bird john.
+bird mary.
+wounded john.
+
+# john and mary are birds but john is wounded.
+# the only fact we can infere here is: 'canfly mary.'
+`
+        ];
+        const current = document.getElementById('logic_program').value;
+        let confirmed = true;
+        if (current && current.length > 0 && !test_programs.includes(current)) {
+          confirmed = confirm("Do you want to discard your program?");
+        }
+        if (confirmed) {
+          document.getElementById('logic_program').value = test_programs[n-1];
+        }
+        tml();
+      }
+    </script>
+  </body>
+</html>
