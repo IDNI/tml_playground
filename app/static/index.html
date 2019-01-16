@@ -1,5 +1,6 @@
 <html>
   <head>
+      <title>Tauchain's TML on the web</title>
       <link rel="icon" href="data:,">
   <style>
     textarea#logic_program {
@@ -14,13 +15,23 @@
       font-size: xx-small;
     }
     p.note {
+      margin-top: 2px;
       font-size: xx-small;
+    }
+    hr.bottom-line {
+      margin: 5em 0 0 0;
+      padding: 0;
+      border: 0;
+      border-bottom: 1px solid black;
+    }
+    span.copyleft {
+      display:inline-block;
+      transform: rotate(180deg);
     }
   </style>
   </head>
   <body onload="test(1)">
     <h1>TML playground</h1>
-    <p class="note">see <a href="https://github.com/idni/tau/">https://github.com/idni/tau/</a> for more info <span id="commit"></span></p>
     <p class="lp_button">Logic programs to try:
       <span onclick="test(1)">1</span>
       <span onclick="test(2)">2</span>
@@ -40,6 +51,12 @@
       Result:<br/>
       <pre id="output"></pre>
     </p>
+    <hr class="bottom-line">
+    <p class="note">
+        TML version: <span id="commit"></span>.<br />
+        For more information about Tauchain and TML see <a href="https://github.com/idni/tau/">Tau's github</a> and  <a href="http://idni.org/">http://idni.org/</a>.<br />
+        <a href="https://gitlab.com/tomasklapka/tml-on-the-web">Source</a> of this page | <span class="copyleft" title="copyleft">&copy;</span>2019 Tomáš Klapka &lt;<a href="mailto:tomas@klapka.cz">tomas@klapka.cz</a>&gt;<br />
+    </p>
     <script>
       function tml() {
         document.getElementById('output').innerText = 'processing...';
@@ -57,7 +74,7 @@
         })
         .then(function (text) {
           if (status != 500) {
-            document.getElementById('commit').innerHTML = `(commit: <a href="https://github.com/IDNI/tau/tree/${commit}">${commit}</a>)`;
+            document.getElementById('commit').innerHTML = `<a href="https://github.com/IDNI/tau/tree/${commit}">${commit}</a>`;
           } else {
             text = `Error: ` + JSON.parse(text).error;
           }
