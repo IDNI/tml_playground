@@ -1,132 +1,187 @@
+<!DOCTYPE html>
 <html>
   <head>
-      <title>Tauchain's TML on the web</title>
-      <link rel="icon" href="data:,">
-  <style>
-    textarea#logic_program {
-      width: 60em;
-      height: 15em;
-    }
-    .lp_button span {
-      border: 1px solid black;
-      padding: 0.1em 0.4em;
-    }
-    span.xx-small {
-      font-size: xx-small;
-    }
-    p.note {
-      margin-top: 2px;
-      font-size: xx-small;
-    }
-    hr.bottom-line {
-      margin: 5em 0 0 0;
-      padding: 0;
-      border: 0;
-      border-bottom: 1px solid black;
-    }
-    span.copyleft {
-      display:inline-block;
-      transform: rotate(180deg);
-    }
-  </style>
+    <title>Tauchain's TML on the web</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="Keywords" content="TML,Tau meta language,Tau,meta language,Tauchain,IDNI,DATALOG,P-DATALOG,PFP,logic programming,reasoning,inference engine,programming,playground,examples,exercises,demo" />
+    <meta name="Description" content="Online playground for TML (Tau Meta Language) with examples." />
+    <link rel="icon" href="data:,">
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: Verdana, Geneva, sans-serif;
+      }
+      h2 {
+        margin-bottom: 0.2em;
+      }
+      textarea#logic_program {
+        width: 100%;
+        height: 15em;
+        margin-bottom: 1em;
+      }
+      textarea#output {
+        width: 100%;
+        height: 20em;
+      }
+      @media only screen and (min-width: 768px) {
+        textarea#logic_program {
+          width: 60em;
+        }
+        textarea#output {
+          width: 60em;
+        }
+      }
+      div#tests {
+        margin: 0 0 0.2em 0;
+      }
+      .row::after {
+        content: "";
+        clear: both;
+        display: table;
+      }
+      div.button,
+      div.active-button {
+        float: left;
+        margin: 0.25em;
+        border-width: 0 2px 3px 0;
+        border-style: solid;
+        border-color: #999999;
+        background: #333333;
+        color: #FFFFFF;
+        padding: 0.1em 0.5em;
+        cursor: pointer;
+      }
+      .tests-label {
+        margin: 0.25em;
+        float: left;
+      }
+      .output {
+        margin: 1em 0;      
+      }
+      .xx-small,
+      .note {
+        font-size: xx-small;
+      }
+      .active-button {
+        background: #AAAAAA!Important;
+      }
+      span.copyleft {
+        display:inline-block;
+        transform: rotate(180deg);
+      }
+    </style>
   </head>
   <body onload="test(1)">
     <h1>TML playground</h1>
-    <p class="lp_button">Logic programs to try:
-      <span onclick="test(1)">1</span>
-      <span onclick="test(2)">2</span>
-      <span onclick="test(3)">transitive closure</span>
-      <span onclick="test(4)">4</span>
-      <span onclick="test(5)">5</span>
-      <span onclick="test(6)">family</span>
-      <span onclick="test(7)">who can fly?</span>
-    </p>
-    <p>
+    <div>
+      <h2>Logic program</h2>
       <textarea id="logic_program"></textarea>
-    </p>
-    <p>
-      <button onclick="tml()">RUN</button>
-    </p>
-    <p>
-      Result:<br/>
-      <pre id="output"></pre>
-    </p>
-    <hr class="bottom-line">
-    <p class="note">
+    </div>
+    <div id="tests" class="row">
+      <div class="tests-label">Try one of these:</div>
+      <div class="button" id="t1" onclick="test(1)">1</div>
+      <div class="button" id="t2" onclick="test(2)">2</div>
+      <div class="button" id="t3" onclick="test(3)">transitive closure</div>
+      <div class="button" id="t4" onclick="test(4)">4</div>
+      <div class="button" id="t5" onclick="test(5)">5</div>
+      <div class="button" id="t6" onclick="test(6)">family</div>
+      <div class="button" id="t7" onclick="test(7)">who can fly?</div>
+    </div>
+    <div class="row">
+      <div class="button" onclick="tml()">RUN</div>
+    </div>
+    <div class="output">
+      <h2>Output</h2>
+      <textarea id="output"></textarea><br/>
+      <input id="show-steps" checked type="checkbox" /><span class="xx-small"> show steps</span>
+      <input id="autoscroll" checked type="checkbox" /><span class="xx-small"> autoscroll</span>
+    </div>
+    <div class="note">
         TML version: <span id="commit"></span>.<br />
         For more information about Tauchain and TML see <a href="https://github.com/idni/tau/">Tau's github</a> and  <a href="http://idni.org/">http://idni.org/</a>.<br />
-        <a href="https://gitlab.com/tomasklapka/tml-on-the-web">Source</a> of this page | <span class="copyleft" title="copyleft">&copy;</span>2019 Tomáš Klapka &lt;<a href="mailto:tomas@klapka.cz">tomas@klapka.cz</a>&gt;<br />
-    </p>
-    <script>
+        <a href="https://gitlab.com/tomasklapka/tml-on-the-web">Source</a> of the playground | <span class="copyleft" title="copyleft">&copy;</span>2019 Tomáš Klapka &lt;<a href="mailto:tomas@klapka.cz">tomas@klapka.cz</a>&gt;<br />
+    </div>
+    <script type="text/javascript">
+      const test_programs = [
+        `# 1 - pairs\n\n1 2.\n?y ?x :- ?x ?y.\n3 ?x :- 2 ?x.`,
+        `# 2 - yes, you can use strings :)\n\na a.\nb b.\na 2.\nb ?x :- a ?x.`,
+        `# 3 - transitive closure\n\ne 1 2.\ne 2 3.\ne 3 4.\ne 4 5.\ne 5 1.\nt ?x ?y :- e ?x ?y.\nt ?x ?y :- t ?x ?z, e ?z ?y.`,
+        `# 4 - padding\n\n1 2.\n1 2 3.\n?y ?x :- ?x ?y.\n3 ?x :- 2 ?x.\n4 ?y ?x :- 2 ?x ?y.\n5 ?y ?x :- 1 ?x ?y.`,
+        `# 5 - more padding\n\n1 1.\n1 2.\n?x :- ?x ?x.`,
+        `# 6 - family (example from Datalog Educational System http://des.sourceforge.net/)\n\n`
+        + `father tom amy.\nfather jack fred.\nfather tony carolII.\nfather fred carolIII.\n\n`
+        + `mother grace amy.\nmother amy fred.\nmother carolI carolII.\nmother carolII carolIII.\n\n`
+        + `parent ?X ?Y :- father ?X ?Y.\nparent ?X ?Y :- mother ?X ?Y.\n\n`
+        + `ancestor ?X ?Y :- parent ?X ?Y.\nancestor ?X ?Y :- parent ?X ?Z, ancestor ?Z ?Y.\n`,
+        `# 7 - who can fly? (read '~' as 'not') - negation does not work yet\n\n`
+        + `canfly ?X :- bird ?X, ~ wounded ?X.\nbird john.\nbird mary.\nwounded john.\n\n`
+        + `# john and mary are birds but john is wounded.\n# the only fact we can infere here is: 'canfly mary.'\n`
+      ];
+      let t = 1; // current test program chosen
+      function test(n) {
+        // read current program from logic program textarea 
+        const current = document.getElementById('logic_program').value;
+        let confirmed = true;
+        // if there is a custom program, ask for confirmation before discarding
+        if (current && current.length > 0 && !test_programs.includes(current)) {
+          confirmed = confirm('Do you want to discard your program?');
+        }
+        if (confirmed) {
+          // populate the logic program
+          document.getElementById('logic_program').value = test_programs[n-1];
+          // deactivate old button and activate the new one
+          document.getElementById('t'+t).className = 'button';
+          t = n;
+          document.getElementById('t'+t).className = 'active-button';
+          // run tml
+          tml();
+        }
+      }
       function tml() {
+        // clear output and show processing status
         document.getElementById('output').innerText = 'processing...';
+        // read logic program from the input textarea
         const lp = document.getElementById('logic_program').value;
         let status = null;
         let commit = null;
+        // HTTP POST to /tml endpoint
         fetch('/tml', {
           method: 'post',
           body: lp
         })
         .then(function (response) {
           status = response.status;
-          commit = response.headers.get('Tau-commit');
+          commit = response.headers.get('Tau-commit'); // read tau commit version
           return response.text();
         })
         .then(function (text) {
-          if (status != 500) {
+          if (status != 500) { // no error from server
+            // update actual commit version link
             document.getElementById('commit').innerHTML = `<a href="https://github.com/IDNI/tau/tree/${commit}">${commit}</a>`;
+
+            // strips steps if show steps not checked
+            if (!document.getElementById('show-steps').checked) {
+              const lines = text.split(`\n`);
+              text = lines.slice(lines.lastIndexOf('', -2) + 1, -1).join(`\n`);
+            }
           } else {
-            text = `Error: ` + JSON.parse(text).error;
+            text = 'Error: ' + JSON.parse(text).error;
           }
-          document.getElementById('output').innerText = text;
+          // update output textarea with new output
+          const output = document.getElementById('output');
+          output.innerHTML = text;
+
+          // autoscroll if checked
+          if (document.getElementById('autoscroll').checked) {
+            output.scrollTop = output.scrollHeight
+          }
         })
         .catch(function (error) {
           console.log('error:', error);
         })
-      }
-      function test(n) {
-        test_programs = [
-        `# 1 - pairs\n\n1 2.\n?y ?x :- ?x ?y.\n3 ?x :- 2 ?x.`,
-        `# 2 - yes, you can use strings :)\n\na a.\nb b.\na 2.\nb ?x :- a ?x.`,
-        `# 3 - transitive closure\n\ne 1 2.\ne 2 3.\ne 3 4.\ne 4 5.\ne 5 1.\nt ?x ?y :- e ?x ?y.\nt ?x ?y :- t ?x ?z, e ?z ?y.`,
-        `# 4 - padding\n\n1 2.\n1 2 3.\n?y ?x :- ?x ?y.\n3 ?x :- 2 ?x.\n4 ?y ?x :- 2 ?x ?y.\n5 ?y ?x :- 1 ?x ?y.`,
-        `# 5 - more padding\n\n1 1.\n1 2.\n?x :- ?x ?x.`,
-        `# 6 - family (example from Datalog Educational System http://des.sourceforge.net/)\n
-father tom amy.
-father jack fred.
-father tony carolII.
-father fred carolIII.
-
-mother grace amy.
-mother amy fred.
-mother carolI carolII.
-mother carolII carolIII.
-
-parent ?X ?Y :- father ?X ?Y.
-parent ?X ?Y :- mother ?X ?Y.
-
-ancestor ?X ?Y :- parent ?X ?Y.
-ancestor ?X ?Y :- parent ?X ?Z, ancestor ?Z ?Y.
-`,
-        `# 7 - who can fly? (read '~' as 'not') - negation does not work yet\n
-canfly ?X :- bird ?X, ~ wounded ?X.
-bird john.
-bird mary.
-wounded john.
-
-# john and mary are birds but john is wounded.
-# the only fact we can infere here is: 'canfly mary.'
-`
-        ];
-        const current = document.getElementById('logic_program').value;
-        let confirmed = true;
-        if (current && current.length > 0 && !test_programs.includes(current)) {
-          confirmed = confirm("Do you want to discard your program?");
-        }
-        if (confirmed) {
-          document.getElementById('logic_program').value = test_programs[n-1];
-        }
-        tml();
       }
     </script>
   </body>
