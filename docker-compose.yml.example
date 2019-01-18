@@ -6,11 +6,8 @@ services:
     build: .
     restart: always
     expose:
-      - 4000
+      - 80
     volumes:
       - ./app:/home/app
-      - /etc/localtime:/etc/localtime:ro
     working_dir: /home/app
     command: [ "npm", "start" ]
-    environment:
-      - DEBUG=*
