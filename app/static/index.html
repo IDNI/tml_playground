@@ -88,7 +88,7 @@
       <div class="button" id="t3" onclick="test(3)">ARITY</div>
       <div class="button" id="t4" onclick="test(4)">RULES</div>
       <div class="button" id="t5" onclick="test(5)">VARIABLES</div>
-      <div class="button" id="t6" onclick="test(6)">AND</div>
+      <div class="button" id="t6" onclick="test(6)">AND/OR</div>
       <div class="button" id="t7" onclick="test(7)">RECURSION</div>
       <div class="button" id="t8" onclick="test(8)">NEGATION</div>
       <div class="button" id="t9" onclick="test(9)">transitive closure</div>
@@ -299,7 +299,7 @@ a 1 2 3 4 5 6.
 
 rain.                   # rain.
 wet :- rain.            # wet if rain.
-freezing :- bellowZero. # freezing if bellow zero.
+freezing :- bellowZero. # freezing if bellow 0.
 
 # Here TML infers it's wet because it knows it
 # rains.
@@ -379,15 +379,24 @@ mother Suzi John.
 bird John.
 
 # TML infers that John beeps and he can fly.`,
-// AND
-`# Multiple conditions in a rule are separated
-# by ',' character. It is read as 'and'.
+// AND/OR
+`# When you need multiple conditions in a body
+# separate them by a comma. You can read comma
+# as 'and':
 
 boy ?x :- child ?x, male ?x.
 # ?x is a boy if ?x is both child and male.
 
 girl ?x :- child ?x, female ?x.
 # ?x is a girl if ?x is both child and female.
+
+# When you need multiple bodies for the same
+# head, you can have multiple rules with the
+# same head:
+
+human ?x :- child ?x.
+human ?x :- adult ?x.
+# ?x is a human if ?x is child or adult.
 
 adult Amy.
 child John.
@@ -400,8 +409,10 @@ female Amy.
 female Jane.
 female Suzi.
 
-# TML infers that John and Jack are boys
-# and that Suzi and Jane are girls`,
+# TML infers: Jack and John are boys.
+# Jane and Suzi are girls.
+# And Amy, Jack, Jane, John and Suzi are
+# humans.`,
 // RECURSION
 `# Recursion is used to traverse through
 # all the entities in a relation.
@@ -418,31 +429,22 @@ parent Tom Amy.
 # relations of all the known entities.
 
 # We need to create 2 rules so TML knows,
-# what ancestor means.
+# what ancestor means. Ancestor is a parent
+# or a parent of an ancestor.
 
-# 'parent is an ancestor':
-ancestor ?anc ?desc :-
-    parent ?anc ?desc.
+# 'parent of a child is an ancestor of the
+# child':
+ancestor ?anc ?child :-
+    parent ?anc ?child.
 
-# 'parent of an ancestor is an ancestor':
+# 'parent of a child, who is an ancestor of
+# its descendant, is an ancestor of the
+# descendant':
 ancestor ?anc ?desc :-
     parent ?anc ?child, ancestor ?child ?desc.
 
 # Notice how ancestor relation is used in both
-# head and body. This is causing the recursion.
-
-# Notice also that both rules are having
-# identical head. This works as a logical 'or'.
-# You can read both rules as:
-# ?anc is an ancestor of ?desc if
-#     ?anc is a parent of ?desc
-# or if
-#     ?anc is a parent of ?child and
-#     ?child is an ancestor of ?desc.
-#
-# or simply:
-# Ancestor is a parent or a parent of
-# an ancestor.`,
+# head and body. This is causing the recursion.`,
 // NEGATION
 `# Negation does not work properly yet.
 #
