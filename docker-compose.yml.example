@@ -11,3 +11,5 @@ services:
       - ./app:/home/app
     working_dir: /home/app
     command: [ "npm", "start" ]
+    environment:
+      - DISABLE_REMOTE=true
