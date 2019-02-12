@@ -1,39 +1,39 @@
-let t = 1; // current test program chosen
+let t = 0; // current test program chosen
 function test(n) {
-    n = n || 0;
-    // read current program from logic program textarea
-    const current = document.getElementById('logic_program').value;
-    let confirmed = true;
-    // ask for confirmation if current program running
-    // if (s.running) {
-    // 	confirmed = confirmed
-    // 		&& confirm('Program is running. Do you want to stop?')
-    // 	stop();
-    // }
-    // if there is a custom program, ask for confirmation before discarding
-    if (current && current.length > 0
-    && !test_programs.includes(current)) {
-        confirmed = confirmed
-            && confirm('Do you want to discard your program?');
-    }
-    if (confirmed) {
-        // populate the logic program
-        const logic_program = document
-            .getElementById('logic_program');
-        logic_program.value = test_programs[n];
-        logic_program.scrollTop = 0; // scroll top
-        // deactivate old button and activate the new one
-        // document.getElementById('t'+t).className = 'button';
-        t = n;
-        // document.getElementById('t'+t).className = 'active-button';
-        if (document.getElementById('live_coding').checked) {
-            rerun();
-        } else {
-            restart();
-        }
-    }
-    // update (or rollback) selection
-    document.getElementById('tests-select').value = t;
+	n = n || 0;
+	// read current program from logic program textarea
+	const current = document.getElementById('logic_program').value;
+	let confirmed = true;
+	// ask for confirmation if current program running
+	// if (s.running) {
+	// 	confirmed = confirmed
+	// 		&& confirm('Program is running. Do you want to stop?')
+	// 	if (confirmed) stop();
+	// }
+	// if there is a custom program, ask for confirmation before discarding
+	if (current && current.length > 0
+	&& !test_programs.includes(current)) {
+		confirmed = confirmed
+			&& confirm('Do you want to discard your program?');
+	}
+	if (confirmed) {
+		// populate the logic program
+		const logic_program = document
+			.getElementById('logic_program');
+		logic_program.value = test_programs[n];
+		logic_program.scrollTop = 0; // scroll top
+		// deactivate old button and activate the new one
+		// document.getElementById('t'+t).className = 'button';
+		t = n;
+		// document.getElementById('t'+t).className = 'active-button';
+		if (document.getElementById('live_coding').checked) {
+			rerun();
+		} else {
+			restart();
+		}
+	}
+	// update (or rollback) selection
+	document.getElementById('tests-select').value = t;
 }
 const test_programs = [
 // intro
