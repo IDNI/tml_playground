@@ -21,7 +21,12 @@ div.panel {
 	width: 50%;
 }
 div.dict {
+	width: 200px;
+	float: left;
 	font-size: 0.8em;
+}
+div.dict table {
+	width: 200px;
 }
 table {
 	border-collapse: collapse;
@@ -34,6 +39,7 @@ div.dict table th {
 	border: 1px solid black;
 	text-align: center;
 }
+
 #running_program {
 	font-size: 0.8em;
 }
@@ -53,6 +59,26 @@ div.dict table th {
 		width: 420px;
 	}
 }
+.hilight_variable,
+div#dict_vars.dict td.dict-value,
+div#dict_syms.dict td.dict-value
+{
+	font-weight: bold;
+	font-style: italic;
+}
+.hilight_punctuation {
+	color: rgb(102, 64, 20);
+}
+.hilight_fact {
+	color: green;
+}
+.hilight_head {
+	color: blue;
+}
+.hilight_body {
+	color: orange;
+}
+
 sub.varid {
 	color: #888888;
 	font-size: 0.4em;
