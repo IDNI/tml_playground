@@ -7,124 +7,60 @@
 		<meta name="Keywords" content="TML,Tau Meta-Language,Tau,Meta-Language,Language,Tauchain,IDNI,DATALOG,PDATALOG,P-DATALOG,Datalog with negation,Unstratified Datalog,PFP,finite ordered structures,PFP logic over finite ordered structures,logic programming,programming language,reasoning,inference engine,programming,playground,examples,exercises,demo" />
 		<meta name="Description" content="Online playground for TML (Tau Meta Language) with examples." />
 		<link rel="icon" href="data:,">
-		<style>
-			* {
-				box-sizing: border-box;
-			}
-			body {
-				font-family: Verdana, Geneva, sans-serif;
-			}
-			h1, h2 {
-				margin: 0.2em 0;
-			}
-			textarea#logic_program {
-				width: 100%;
-				height: 18em;
-				margin-bottom: 1em;
-			}
-			textarea#output {
-				width: 100%;
-				height: 20em;
-			}
-			@media only screen and (min-width: 768px) {
-				textarea#logic_program {
-					width: 720px;
-					height: 20em;
-				}
-				textarea#output {
-					width: 720px;
-				}
-				div#tests {
-					width: 720px;
-				}
-			}
-			.row::after {
-				content: "";
-				clear: both;
-				display: table;
-			}
-			div.button,
-			div.active-button {
-				float: left;
-				margin: 0.25em;
-				border-width: 0 2px 3px 0;
-				border-style: solid;
-				border-color: #999999;
-				background: #333333;
-				color: #FFFFFF;
-				padding: 0.1em 0.5em;
-				padding-bottom: 0.2em;
-				cursor: pointer;
-			}
-			.tests-label {
-				margin: 0.25em;
-				float: left;
-			}
-			.note {
-				margin-top: 1em;
-			}
-			.xx-small,
-			.note {
-				font-size: xx-small;
-			}
-			.active-button {
-				background: #AAAAAA!Important;
-			}
-			span.copyleft {
-				display:inline-block;
-				-moz-transform: scale(-1, 1);
-				-webkit-transform: scale(-1, 1);
-				-o-transform: scale(-1, 1);
-				-ms-transform: scale(-1, 1);
-				transform: scale(-1, 1);
-			}
-			.disabled-button {
-				border-color: #DDDDDD!Important;
-				background: #CCCCCC!Important;
-				color: #AAAAAA!Important;
-			}
-			#status-info {
-				display: none;
-			}
-		</style>
+		<link rel="stylesheet" type="text/css" href="style.css" />
 	</head>
-	<body onload="test()">
+	<body onload="init_playground()">
 		<h1>TML playground</h1>
-		<div id="tests" class="row">
-			<div class="button" id="t0" onclick="test(0)">intro</div>
-			<div class="button" id="t1" onclick="test(1)">FACTS</div>
-			<div class="button" id="t2" onclick="test(2)">RELATIONS</div>
-			<div class="button" id="t3" onclick="test(3)">ARITY</div>
-			<div class="button" id="t4" onclick="test(4)">RULES</div>
-			<div class="button" id="t5" onclick="test(5)">VARIABLES</div>
-			<div class="button" id="t6" onclick="test(6)">AND/OR</div>
-			<div class="button" id="t7" onclick="test(7)">RECURSION</div>
-			<div class="button" id="t8" onclick="test(8)">NEGATION</div>
-			<div class="button" id="t9" onclick="test(9)">transitive
-				closure</div>
-			<div class="button" id="t10" onclick="test(10)">family</div>
-		</div>
-		<div>
-			<h2>Logic program</h2>
-			<textarea id="logic_program"></textarea>
+		<div class="row">
+			<div id="link_button" title="get link to this program" onclick="link()"
+				class="button">&#128279;</div>
+			<div id="run_button"  title="run program"  onclick="run()"
+				class="button">&#9654;</div>
+			<div id="step_button" title="do a step" onclick="step()"
+				class="button">&#9654;&#9646;</div>
+			<div id="stop_button" title="stop running" onclick="stop()"
+				class="button disabled-button" >&#9724;</div>
+			<div class="bar-select">
+				<select id="tests-select" onchange="test(document.getElementById('tests-select').value)">
+					<option value="0">intro</option>
+					<option value="1">FACTS</option>
+					<option value="2">RELATIONS</option>
+					<option value="3">ARITY</option>
+					<option value="4">RULES</option>
+					<option value="5">VARIABLES</option>
+					<option value="6">AND/OR</option>
+					<option value="7">RECURSION</option>
+					<option value="8">NEGATION</option>
+					<option value="9">transitive closure</option>
+					<option value="10">family</option>
+				</select>
+			</div>
 		</div>
 		<div class="row">
-			<div id="run_button"  title="RUN"  onclick="run()"
-				class="button">&#9654;</div>
-			<div id="step_button" title="STEP" onclick="step()"
-				class="button">&#9654;&#9646;</div>
-			<div id="stop_button" title="STOP" onclick="stop()"
-				class="button disabled-button" >&#9724;</div>
-		</div>
+			<div>
+				<input id="live_coding" type="checkbox" checked="true" />
+				<span class="xx-small"> live coding</span>
+				<input id="sort-result" type="checkbox" checked="true" />
+				<span class="xx-small"> sort output</span>
+				<input id="show-info"   type="checkbox" checked="true" />
+				<span class="xx-small"> show info</span>
+				<input id="autoscroll"  type="checkbox" />
+				<span class="xx-small"> autoscroll</span>
+			</div>
+			<div class="panel">
+				<textarea id="logic_program" oninput="on_program_change()""></textarea>
+			</div>
+			<div class="panel">
+				<div id="running_program"></div>
+			</div>
+			<div class="panel">
+				<div id="dict_vars" class="dict"></div>
+				<div id="dict_syms" class="dict"></div>
+			</div>
+			</div>
 		<div class="output">
 			<h2>Output</h2>
 			<textarea id="output"></textarea><br/>
-			<input id="sort-result" type="checkbox" checked="true" />
-			<span class="xx-small"> sort output</span>
-			<input id="show-info"   type="checkbox" checked="true" />
-			<span class="xx-small"> show info</span>
-			<input id="autoscroll"  type="checkbox" />
-			<span class="xx-small"> autoscroll</span>
 		</div>
 		<div id="status-info">
 			RUNNING: <span id="running_status"></span>
@@ -144,10 +80,15 @@
 			&lt;<a href="mailto:tomas@klapka.cz">tomas@klapka.cz</a>&gt;
 			<br />
 		</div>
-		<!-- tml.min.js (19 kB)          -->
+		<!--------------------------------->
+		<!-- HTML ends here              -->
+		<!--------------------------------->
+		<!-- javascript starts here      -->
+		<!--------------------------------->
+		<!-- tml.min.js       (19 kB)    -->
 		<!-- tml.debug.min.js (32 kB)    -->
-		<!-- tml.js (36 kB)              -->
-		<!-- tml.debug.js (56 kB)        -->
+		<!-- tml.js           (36 kB)    -->
+		<!-- tml.debug.js     (56 kB)    -->
 		<script src="tml.min.js"></script>
 		<script type="text/javascript">
 			const { lp } = require('tml');
@@ -161,7 +102,7 @@
 					return;
 				}
 				// read logic program from the input textarea
-				const source = document.getElementById('logic_program').value;
+				let source = document.getElementById('logic_program').value;
 				// clear output and show running status
 				document.getElementById('output').innerText = 'running...';
 				// init state
@@ -170,22 +111,33 @@
 				s.step = 0; // step counter
 				s.d = 0;    // current db root
 				s.s = [];   // previous steps' db roots
+				s.raw = []; // empty raw program
 				s.p = new lp();
 				try {
-					s.raw = s.p.prog_read(lp.string_read_text(source));
-					console.log("program dict: ", s.p.d);
-					console.log('raw rules:', s.raw);
+					 // strip comments and multiple lines
+					source = lp.string_read_text(source);
+					// document.getElementById('running_program')
+					// 	.innerHTML = source.replace(/\n+/gm, `<br/>`);
+					s.raw = s.p.prog_read(source);
+					update_running_program();
+					// console.log("program dict: ", s.p.d);
+					// console.log('raw rules:', s.raw);
 				} catch (err) { // parse error
 					console.log('Parse error:', err);
 					s.result = `Parse error: ${err}`;
 				}
 				show_status();
 			}
+			function restart() {
+				s.running = false;
+				start();
+			}
 			function stop() {
 				s.running = false;
 				show_status();
 				output_result(s.p.toString());
 			}
+			function rerun() { s.running = false; run(); }
 			function run() { step(0); }
 			// Do N steps. default 1. 0 = infinity (ie. run until a fixed point)
 			function step(n = 1) {
@@ -200,8 +152,8 @@
 					try {
 						s.p.step(); // do pfp step
 					} catch (err) {
-						console.log('PFP error', err);
-						s.result = `PFP error: ${err}`;
+						console.log('Runtime error', err);
+						s.result = `Runtime error: ${err}`;
 						return false;
 					}
 					// FP if db root resulted already from a previous step
@@ -239,6 +191,48 @@
 					output.scrollTop = output.scrollHeight
 				}
 			}
+			function update_dictionary() {
+				const table = (a, neg = false) => {
+					let res = `<table>\n    <tr><th colspan="2">${neg?'variables':'symbols'}</th></tr>\n`;
+					for (let i = 1; i < a.length; i++) {
+						res += `    <tr><td>${neg?'-':''}${i}</td><td>${a[i]}</td></tr>\n`
+					}
+					return res + `</table>\n`;
+				}
+				document.getElementById('dict_syms').innerHTML = table(s.p.d.syms);
+				document.getElementById('dict_vars').innerHTML = table(s.p.d.vars, true);
+			}
+			function update_running_program() {
+				const arg_toString = a => {
+					const str = a < 0
+						? s.p.d.vars[-a]
+						: a > 0
+							? s.p.d.get(a)
+							: false;
+					return str ? `<span title="${str}"><sub class="varid">${a}</sub>${str}</span>` : str;
+				}
+				const term_toString = t => {
+					const res = `${t[0]<0 ? '~' : ''}${t.slice(1).map(arg_toString).filter(str=>str!==false).join(' ')}`;
+					return res;
+				}
+				const rule_toString = r => {
+					let res = term_toString(r[r.length-1]); // head or fact
+					const body_len = r.length-1;
+					if (body_len) {	// rule body
+						res += ' :- ';
+						for (let i = 0; i < body_len; i++) {
+							//console.log('res before adding body term, ', i, res);
+							res += term_toString(r[i]) + (i+1 < body_len ? ', ' : '');
+							//console.log('res after adding body term, ', i, res);
+						}
+					}
+					res += `.<br/>\n`;
+					return res;
+				}
+				document.getElementById('running_program')
+					.innerHTML = s.raw.map(rule_toString).join('');
+				update_dictionary();
+			}
 			function show_status() {
 				const rs = document.getElementById('running_status');
 				const ss = document.getElementById('step_status');
@@ -247,7 +241,49 @@
 				ss.innerText = s.running ? s.step : 'n/a';
 				sb.classList = "button" + (s.running ? "" : " disabled-button");
 			}
-			show_status();
+			function link() {
+				const href = window.location.href;
+				const prog = document.getElementById('logic_program').value;
+				href.search = 'prog=' + encodeURIComponent(prog);
+				const link = prompt(`Open URL in new window?\nOr copy to clipboard and cancel.`, href);
+				if (link != null) {
+					window.open(linke, '_blank');
+				}
+			}
+			// Returns a function, that, as long as it continues to be invoked, will not
+			// be triggered. The function will be called after it stops being called for
+			// N milliseconds. If `immediate` is passed, trigger the function on the
+			// leading edge, instead of the trailing.
+			// https://davidwalsh.name/javascript-debounce-function
+			function debounce(fn, wait, immediate) {
+				let t;
+				return () => {
+					const a = arguments;
+					const l = () => {
+						t = null;
+						if (!immediate) fn.apply(this, a);
+					};
+					var its_time = immediate && !t;
+					clearTimeout(t);
+					t = setTimeout(l, wait);
+					if (its_time) fn.apply(this, a);
+				};
+			};
+			const debounce_live_coding = debounce(rerun, 200);
+			function on_program_change() {
+				if (document.getElementById('live_coding').checked) {
+					debounce_live_coding();
+				}
+			}
+			function init_playground() {
+				const prog = new URLSearchParams(window.location.search).get('prog');
+				if (prog && prog.length > 0)  { // load prog from URL
+					document.getElementById('logic_program').value = prog;
+				} else { // or load intro if not in URL
+					test(9);
+				}
+				show_status();
+			}
 			////////////////////
 			// test programs
 			//
@@ -258,11 +294,11 @@
 				const current = document.getElementById('logic_program').value;
 				let confirmed = true;
 				// ask for confirmation if current program running
-				if (s.running) {
-					confirmed = confirmed
-						&& confirm('Program is running. Do you want to stop?')
-					stop();
-				}
+				// if (s.running) {
+				// 	confirmed = confirmed
+				// 		&& confirm('Program is running. Do you want to stop?')
+				// 	stop();
+				// }
 				// if there is a custom program, ask for confirmation before discarding
 				if (current && current.length > 0
 				&& !test_programs.includes(current)) {
@@ -276,10 +312,17 @@
 					logic_program.value = test_programs[n];
 					logic_program.scrollTop = 0; // scroll top
 					// deactivate old button and activate the new one
-					document.getElementById('t'+t).className = 'button';
+					// document.getElementById('t'+t).className = 'button';
 					t = n;
-					document.getElementById('t'+t).className = 'active-button';
+					// document.getElementById('t'+t).className = 'active-button';
+					if (document.getElementById('live_coding').checked) {
+						rerun();
+					} else {
+						restart();
+					}
 				}
+				// update (or rollback) selection
+				document.getElementById('tests-select').value = t;
 			}
 			const test_programs = [
 // intro

@@ -1,0 +1,112 @@
+* {
+	box-sizing: border-box;
+}
+body {
+	font-family: Verdana, Geneva, sans-serif;
+}
+h1, h2 {
+	margin: 0.2em 0;
+}
+textarea#logic_program {
+	width: 50%;
+	height: 18em;
+	margin-bottom: 1em;
+}
+textarea#output {
+	width: 50%;
+	height: 20em;
+}
+div.panel {
+	float: left;
+	width: 50%;
+}
+div.dict {
+	font-size: 0.8em;
+}
+table {
+	border-collapse: collapse;
+}
+table, tr, th, td {
+	border: 0;
+}
+div.dict table td,
+div.dict table th {
+	border: 1px solid black;
+	text-align: center;
+}
+#running_program {
+	font-size: 0.8em;
+}
+@media only screen and (min-width: 748px) {
+	textarea#logic_program {
+		width: 400px;
+		height: 20em;
+	}
+	textarea#output {
+		width: 400px;
+	}
+	div#tests {
+		width: 400px;
+	}
+	div.panel{
+		float: left;
+		width: 420px;
+	}
+}
+sub.varid {
+	color: #888888;
+	font-size: 0.4em;
+}
+.row::after {
+	content: "";
+	clear: both;
+	display: table;
+}
+div.bar-select {
+	margin-left: 1em;
+	width: 100px;
+	float: left;
+}
+div.button,
+div.active-button {
+	float: left;
+	margin: 0.25em;
+	border-width: 0 2px 3px 0;
+	border-style: solid;
+	border-color: #999999;
+	background: #333333;
+	color: #FFFFFF;
+	padding: 0.1em 0.5em;
+	padding-bottom: 0.2em;
+	cursor: pointer;
+}
+.tests-label {
+	margin: 0.25em;
+	float: left;
+}
+.note {
+	margin-top: 1em;
+}
+.xx-small,
+.note {
+	font-size: xx-small;
+}
+.active-button {
+	background: #AAAAAA!Important;
+}
+span.copyleft {
+	display:inline-block;
+	-moz-transform: scale(-1, 1);
+	-webkit-transform: scale(-1, 1);
+	-o-transform: scale(-1, 1);
+	-ms-transform: scale(-1, 1);
+	transform: scale(-1, 1);
+}
+.disabled-button {
+	border-color: #DDDDDD!Important;
+	background: #CCCCCC!Important;
+	color: #AAAAAA!Important;
+}
+#status-info {
+	display: none;
+}
