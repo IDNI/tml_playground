@@ -176,24 +176,24 @@ function raw_toString(raw, negs = false) {
 		res += `<span class="hilight_punctuation">.</span><br/>\n`;
 		return res;
 	}
-	return '# <strong>legend</strong>: <sub class="varid">varid</sub><span class="hilight_fact">facts</span>' +
-		(negs ? `, <span class="hilight_head">heads</span>, <span class="hilight_del_head">deletion heads</span>, `+
-			`<span class="hilight_body">bodies</span>` : '') +
-			`<br/>\n<br/>\n` + raw.map(rule_toString).join('');
+	const rendered = raw.map(rule_toString).join('');
+	const legend = '# <strong>legend</strong>:<br/>\n# <sub class="varid">varid</sub><span class="hilight_fact">facts</span>' +
+		(negs ? `, <span class="hilight_head">heads (adds)</span>, <span class="hilight_del_head">negative heads (dels)</span>, `+
+			`<span class="hilight_body">bodies (conditions)</span>` : '');
+	return rendered + (rendered.length > 0 ? `<br/>\n` : '') + legend;
 }
 function update_input_program() {
-	const dict_out = (a, neg = false) => {
-		if (a.length === 1) return '';
-		let res = `# <strong>${neg?'variables':'symbols'}</strong>:<br/>\n# `;
+	const dict_out = (a, vars = false) => {
+	let res = `#<br/>\n# <strong>${vars?'variables':'symbols'}</strong>:${a.length===1?' n/a':'<br/>\n# '}`;
 		for (let i = 1; i < a.length; i++) {
-			res += `<span title="${a[i]}"><sub class="varid">${neg?'-':''}${i}</sub>${a[i]}${i<a.length-1?', ':''}</span> `;
+			res += `<sub class="varid">${vars?'-':''}${i}</sub><span title="${a[i]}"${vars?` class="hilight_variable"`:''}>${a[i]}${i<a.length-1?', ':''}</span> `;
 			if (i < a.length-1 && i % 10 === 0) res += `<br/>\n#`;
 		}
 		return res + `<br/>\n`;
 	}
+	document.getElementById('input_program').innerHTML = raw_toString(s.raw, true);
+	document.getElementById('dict_vars').innerHTML = dict_out(s.p.d.vars, true);
 	document.getElementById('dict_syms').innerHTML = dict_out(s.p.d.syms);
-	document.getElementById('dict_vars').innerHTML = `#<br/>\n` + dict_out(s.p.d.vars, true);
-	document.getElementById('input_program').innerHTML = `#<br/>\n` + raw_toString(s.raw, true);
 }
 function update_status() {
 	const sb = document.getElementById('stop_button');
