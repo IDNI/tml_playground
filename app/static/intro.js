@@ -301,46 +301,18 @@ ancestor ?anc ?desc :-
 
 # Notice how ancestor relation is used in both
 # head and body. This is causing the recursion.`,
-// NEGATION
-`# Negation does not work properly yet.
-#
-# For negation is used a '~' character.
-# You can read it as 'not'.
-
-bird Coco.
-bird Charlie.
-wounded Charlie.
-
-# You can use negation in bodies
-canFly ?X :- bird ?X, ~wounded ?X.
-# ?X can fly if ?X is bird and is not wounded.
-# or simply: Not wounded bird can fly.
-
-# Coco and Charlie are birds but Charlie is
-# wounded. The only fact TML can infer here
-# is that Coco can fly.`,
-// NEGATION in heads
-`# You can use negation in heads
-
-e 1 2.
-e 2 3.
-e 3 4.
-e 4 5.
-e 5 1.
-notdone.
-t ?x ?y :- e ?x ?y, notdone.
-t ?x ?z :- t ?x ?y, e ?y ?z, notdone.
-~t ?x ?y :- e ?x ?y, done.
-done :- notdone.
-~notdone :- done.
-`,
 // TRANSITIVE CLOSURE
-`# Transitive closure of a directed graph is
-# simply another directed graph representing
-# paths in the original graph.
-
+`# Transitive closure (TC)
+#
+# TC of a directed graph is simply another
+# directed graph representing paths
+# in the original graph.
+#
+# This is a classical example of recursion.
+#
 # Let's have a directed graph represented by
-# 'e' relation:
+# following 'e' relation:
+
 e 1 2.
 e 2 3.
 e 3 4.
@@ -358,6 +330,65 @@ tc ?x ?y :- tc ?x ?z, e ?z ?y.
 
 # TML infers all the possible paths in the
 # 'e' graph into 'tc' graph.`,
+// NEGATION
+`# Negation (does not work properly yet!)
+#
+# For negation is used a '~' character.
+# You can read it as 'not'.
+
+bird Coco.
+bird Charlie.
+wounded Charlie.
+
+# You can use negation in bodies
+canFly ?X :- bird ?X, ~wounded ?X.
+# ?X can fly if ?X is bird and is not wounded.
+# or simply: Not wounded bird can fly.
+
+# Coco and Charlie are birds but Charlie is
+# wounded. The only fact TML can infer here
+# is that Coco can fly.`,
+// DELETION
+`# Negation in heads deletes the fact from
+# the database of facts.
+
+happy.          # happy.
+~happy :- sad.  # not happy if sad.
+sad.            # sad.
+# will result into 'sad'. No 'happy'.
+
+# e relation represents directed graph:
+# 1->2, 2->3, 3->4, 4->5, 5->1
+e 1 2.
+e 2 3.
+e 3 4.
+e 4 5.
+e 5 1.
+
+# Following program should get the first
+# non-direct (transitive) path from each
+# node of the graph 'e'
+
+# state of the program: not done
+notdone.
+
+# TRANSITIVE CLOSURE to get all
+# possible paths through the graph
+# while notdone
+t ?x ?y :- e ?x ?y, notdone.
+t ?x ?z :- t ?x ?y, e ?y ?z, notdone.
+
+# and we are done (yes, in the 1st step)
+done :- notdone.
+
+# if done, remove original graph
+# from the resulting graph
+~t ?x ?y :- e ?x ?y, done.
+
+# if done, then remove notdone fact to
+# stop the TC
+~notdone :- done.
+`,
 // family
 `father Tom Amy.
 father Jack Fred.

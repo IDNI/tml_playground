@@ -79,9 +79,6 @@ div.dict table th {
 .hide {
 	display: none;
 }
-#input_program {
-	margin-top: 1em;
-}
 @media only screen and (min-width: 748px) {
 	#editor textarea {
 		width: 720px;
@@ -107,17 +104,21 @@ div.dict table th {
 	font-style: italic;
 }
 .hilight_punctuation {
-	color: rgb(102, 64, 20);
-}
-.hilight_fact {
-	color: green;
+	color: #a53872;
 }
 .hilight_head {
+	color: green;
+}
+.hilight_fact {
 	color: blue;
 }
 .hilight_body {
 	color: orange;
 }
+.hilight_del_head {
+	color: red;
+}
+
 div.tab-activator {
 	float: left;
 	margin: 0;
