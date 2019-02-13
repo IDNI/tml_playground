@@ -1,5 +1,5 @@
-let t = 0; // current test program chosen
-function test(n) {
+let current_intro = 0; // current intro program chosen
+function intro(n) {
 	n = n || 0;
 	// read current program from logic program textarea
 	const current = document.getElementById('logic_program').value;
@@ -24,7 +24,7 @@ function test(n) {
 		logic_program.scrollTop = 0; // scroll top
 		// deactivate old button and activate the new one
 		// document.getElementById('t'+t).className = 'button';
-		t = n;
+		current_intro = n;
 		// document.getElementById('t'+t).className = 'active-button';
 		if (document.getElementById('live_coding').checked) {
 			rerun();
@@ -33,7 +33,7 @@ function test(n) {
 		}
 	}
 	// update (or rollback) selection
-	document.getElementById('tests-select').value = t;
+	document.getElementById('tests-select').value = current_intro;
 }
 const test_programs = [
 // intro
@@ -315,7 +315,7 @@ canFly ?X :- bird ?X, ~wounded ?X.
 # or simply: Not wounded bird can fly.
 
 # Coco and Charlie are birds but Charlie is
-# wounded. The only fact TML can infere here
+# wounded. The only fact TML can infer here
 # is that Coco can fly.`,
 // TRANSITIVE CLOSURE
 `# Transitive closure of a directed graph is

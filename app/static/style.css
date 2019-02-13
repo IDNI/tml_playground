@@ -45,18 +45,18 @@ div.dict table th {
 }
 @media only screen and (min-width: 748px) {
 	textarea#logic_program {
-		width: 400px;
+		width: 720px;
 		height: 20em;
 	}
 	textarea#output {
-		width: 400px;
+		width: 720px;
 	}
 	div#tests {
-		width: 400px;
+		width: 720px;
 	}
 	div.panel{
 		float: left;
-		width: 420px;
+		width: 730px;
 	}
 }
 .hilight_variable,

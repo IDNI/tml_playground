@@ -11,7 +11,7 @@
 	</head>
 	<body onload="init_playground()">
 		<h1>TML playground</h1>
-		<div class="row">
+		<div id="tab_0" class="row">
 			<div id="link_button" title="get link to this program" onclick="link()"
 				class="button">&#128279;</div>
 			<div id="run_button"  title="run program"  onclick="run()"
@@ -21,7 +21,7 @@
 			<div id="stop_button" title="stop running" onclick="stop()"
 				class="button disabled-button" >&#9724;</div>
 			<div class="bar-select">
-				<select id="tests-select" onchange="test(document.getElementById('tests-select').value)">
+				<select id="tests-select" onchange="intro(document.getElementById('tests-select').value)">
 					<option value="0">intro</option>
 					<option value="1">FACTS</option>
 					<option value="2">RELATIONS</option>
@@ -35,11 +35,8 @@
 					<option value="10">family</option>
 				</select>
 			</div>
-		</div>
-		<div class="row">
 			<div>
-				<input id="live_coding" type="checkbox" checked="true" />
-				<span class="xx-small"> live coding</span>
+				<input id="live_coding" type="checkbox" checked="true" />&nbsp;<span class="xx-small"> live coding</span>
 				<input id="sort-result" type="checkbox" checked="true" />
 				<span class="xx-small"> sort output</span>
 				<input id="show-info"   type="checkbox" checked="true" />
@@ -47,19 +44,25 @@
 				<input id="autoscroll"  type="checkbox" />
 				<span class="xx-small"> autoscroll</span>
 			</div>
+		</div>
+		<div id="tab_1" class="row">
 			<div class="panel">
 				<textarea id="logic_program" oninput="on_program_change()""></textarea>
 			</div>
+		</div>
+		<div id="tab_2" class="row">
 			<div class="panel">
 				<div id="running_program"></div>
 			</div>
+		</div>
+		<div id="tab_3" class="row">
 			<div class="panel">
 				<div id="dict_syms" class="dict"></div>
 				<div id="dict_vars" class="dict"></div>
 			</div>
 		</div>
-		<div class="output">
-			<h2>Output</h2>
+		<div id="step_outputs"></div>
+		<div id="tab_output" class="output">
 			<textarea id="output"></textarea><br/>
 		</div>
 		<div id="status-info">

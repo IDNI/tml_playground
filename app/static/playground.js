@@ -3,6 +3,9 @@ const s = {    // running state
 	running: false,
 	result: '' // output of the program
 }
+const _counters = {
+	output: 0
+}
 function start() {
 	if (s.running) {
 		console.log('Already running. Cannot start.');
@@ -21,16 +24,12 @@ function start() {
 	let source = lp_ta.value;
 	lp_ta.readOnly = "true";
 	// clear output and show running status
-	document.getElementById('output').innerText = 'running...';
+	document.getElementById('output').innerText = '';
 	try {
-		 // strip comments and multiple lines
+		// strip comments and multiple lines
 		source = lp.string_read_text(source);
-		// document.getElementById('running_program')
-		// 	.innerHTML = source.replace(/\n+/gm, `<br/>`);
 		s.raw = s.p.prog_read(source);
-		update_running_program();
-		// console.log("program dict: ", s.p.d);
-		// console.log('raw rules:', s.raw);
+		// update_running_program();
 	} catch (err) { // parse error
 		console.log('Parse error:', err);
 		s.result = `Parse error: ${err}`;
@@ -43,7 +42,7 @@ function restart() {
 }
 function stop() {
 	s.running = false;
-	document.getElementById('logic_program').readOnly = "false";
+	document.getElementById('logic_program').removeAttribute('readOnly');
 	show_status();
 	output_result(s.p.toString());
 }
@@ -64,6 +63,10 @@ function step(n = 1) {
 		} catch (err) {
 			console.log('Runtime error', err);
 			s.result = `Runtime error: ${err}`;
+			s.running = false;
+			show_status();
+			output_result(s.result);
+			document.getElementById('logic_program').removeAttribute('readOnly');
 			return false;
 		}
 		// FP if db root resulted already from a previous step
@@ -102,7 +105,11 @@ function output_result(result) {
 		output.scrollTop = output.scrollHeight
 	}
 	// update output
-	get_raw_db();
+	// const last_output_id = _counters.output++;
+	// const facts = get_raw_db();
+	// //document.getElementById(`tab_${3+last_output_id}`).style.display = 'none';
+	// const o = document.getElementById('step_outputs');
+	// o.innerHTML = `<div id="tab_${3+_counters.output}\n` + raw_toString(facts) + `\n</div>`;
 }
 function update_dictionary() {
 	const table = (a, neg = false) => {
@@ -118,7 +125,7 @@ function update_dictionary() {
 // output content raw facts from the db
 function get_raw_db() {
 	const p = s.p;
-	let t = p.pdbs.from_bits(p.db, p.bits, p.ar, 1);
+	let t = p.pdbs.from_bits(p.db, p.bits, p.ar, 1).map(t=>[t]);
 	if (document.getElementById('sort-result').checked) {
 		const cmp = (a, b) => {
 			const l = a.length < b.length ? a.length : b.length;
@@ -131,19 +138,27 @@ function get_raw_db() {
 		}
 		t = t.sort(cmp);
 	}
-	let res = '';
-	console.log(t);
-	return res;
+	return t;
 }
-
-function update_running_program() {
+function raw_toString(raw) {
+	console.log('raw_toString', raw);
 	const arg_toString = (a, hilight = 'body') => {
 		if (a == 0) { return false; }
 		return `<span title="${a}"><sub class="varid">${a}</sub><span class="hilight_${hilight}${a<0?' hilight_variable':''}">${s.p.d.get(a)}</span></span>`;
 	}
 	const term_toString = (t, hilight = 'body') => {
-		const res = `${t[0]<0 ? '<span class="hilight_punctuation">~</span>' : ''}` +
-			`${t.slice(1).map(a=>arg_toString(a, hilight)).filter(str=>str!==false).join(' ')}`;
+		console.log('term_toString t', t);
+		let res = '';
+		let from = 0; // slice from position
+		if (t.length === 4) { // raw term with neg in [0]
+			from = 1; // from=1 to skip neg
+			if (t[0] < 0) { // if neg add '~' punctuation
+				res += '<span class="hilight_punctuation">~</span>';
+			}
+			t.shift();
+		}
+		console.log('t', t)
+		res += `${t.slice(from).map(a=>arg_toString(a, hilight)).filter(str=>str!==false).join(' ')}`;
 		return res;
 	}
 	const rule_toString = r => {
@@ -155,16 +170,17 @@ function update_running_program() {
 		 if (is_rule) {
 			res += ' <span class="hilight_punctuation">:-</span> ';
 			for (let i = 0; i < body_len; i++) {
-				//console.log('res before adding body term, ', i, res);
 				res += term_toString(r[i], 'body') + (i+1 < body_len ? '<span class="hilight_punctuation">,</span> ' : '');
-				//console.log('res after adding body term, ', i, res);
 			}
 		}
 		res += `<span class="hilight_punctuation">.</span><br/>\n`;
 		return res;
 	}
+	return raw.map(rule_toString).join('');
+}
+function update_running_program() {
 	document.getElementById('running_program')
-		.innerHTML = s.raw.map(rule_toString).join('');
+		.innerHTML = raw_toString(s.raw);
 	update_dictionary();
 }
 function show_status() {
@@ -214,7 +230,7 @@ function init_playground() {
 	if (prog && prog.length > 0)  { // load prog from URL
 		document.getElementById('logic_program').value = prog;
 	} else { // or load intro if not in URL
-		test(9);
+		intro(9);
 	}
 	show_status();
 }
