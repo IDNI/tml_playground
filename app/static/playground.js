@@ -6,6 +6,8 @@ const s = {    // running state
 const _counters = {
 	output: 0
 }
+const tabs = [ 'output', 'input', 'steps' ];
+
 function start() {
 	if (s.running) {
 		console.log('Already running. Cannot start.');
@@ -20,21 +22,20 @@ function start() {
 	s.raw = []; // empty raw program
 	s.p = new lp();
 	// read logic program from the input textarea
-	const lp_ta = document.getElementById('logic_program');
-	let source = lp_ta.value;
-	lp_ta.readOnly = "true";
-	// clear output and show running status
-	document.getElementById('output').innerText = '';
+	let source = document.getElementById('editor_textarea').value;
+	// clear steps, output and show running status
+	document.getElementById('steps').innerText = '';
+	document.getElementById('output_textarea').innerText = '';
 	try {
 		// strip comments and multiple lines
 		source = lp.string_read_text(source);
 		s.raw = s.p.prog_read(source);
-		// update_running_program();
+		update_input_program();
 	} catch (err) { // parse error
 		console.log('Parse error:', err);
 		s.result = `Parse error: ${err}`;
 	}
-	show_status();
+	update_status();
 }
 function restart() {
 	s.running = false;
@@ -42,14 +43,15 @@ function restart() {
 }
 function stop() {
 	s.running = false;
-	document.getElementById('logic_program').removeAttribute('readOnly');
-	show_status();
+	s.stopped = true;
+	update_status();
 	output_result(s.p.toString());
 }
 function rerun() { s.running = false; run(); }
 function run() { step(0); }
 // Do N steps. default 1. 0 = infinity (ie. run until a fixed point)
 function step(n = 1) {
+	s.stopped = false;
 	if (!s.running) {
 		start();
 	}
@@ -64,9 +66,8 @@ function step(n = 1) {
 			console.log('Runtime error', err);
 			s.result = `Runtime error: ${err}`;
 			s.running = false;
-			show_status();
+			update_status();
 			output_result(s.result);
-			document.getElementById('logic_program').removeAttribute('readOnly');
 			return false;
 		}
 		// FP if db root resulted already from a previous step
@@ -79,48 +80,53 @@ function step(n = 1) {
 			s.d = 0;
 			s.running = false;
 			output_result(s.result);
-			document.getElementById('logic_program').removeAttribute('readOnly');
 			break;
 		}
 		output_result(s.p.toString());
 	}
-	show_status();
+	update_status();
+}
+function toggle_step_details(step) {
+	document.getElementById(`step_${step}_details`).classList.toggle("hide");
+	document.getElementById(`step_${step}_activator`).classList.toggle("step-active");
 }
 function output_result(result) {
+	// add step output from raw db
+	const facts = get_raw_db();
+	const s_div = document.createElement('div'); s_div.id = `step_${s.step}`;
+	s_div.innerHTML =
+		`	<div id="step_${s.step}_activator" class="step-activator" onclick="toggle_step_details(${s.step})">` +
+		`STEP ${s.step} <span class="collapser">&#9654;</span>` +
+		` nodes: ${s.p.pdbs.length} + ${s.p.pprog.length}` +
+		`</div>\n` +
+		`	<div id="step_${s.step}_details" class="step-details">\n` + raw_toString(facts) + `\n</div>`
+	document.getElementById('steps').insertAdjacentElement("beforeend", s_div);
+	if (s.step > 0) { // collapse previous step
+		addClass(document.getElementById(`step_${s.step}_details`), "hide");
+	}
 	// sort output if sort-result checked
 	if (document.getElementById('sort-result').checked) {
 		result = result.split(`\n`).sort().join(`\n`);
 	}
 	result = result.trim();
-	// add info if show-info checked
-	if (document.getElementById('show-info').checked) {
-		result = `# STEP: ${s.step} ` +
-			`STATUS: ${s.running?'RUNNING':'STOPPED'}\n\n` + result;
-	}
 	// update output textarea with new output
-	const output = document.getElementById('output');
-	output.innerHTML = result;
-	// autoscroll if checked
-	if (document.getElementById('autoscroll').checked) {
-		output.scrollTop = output.scrollHeight
-	}
-	// update output
-	// const last_output_id = _counters.output++;
-	// const facts = get_raw_db();
-	// //document.getElementById(`tab_${3+last_output_id}`).style.display = 'none';
-	// const o = document.getElementById('step_outputs');
-	// o.innerHTML = `<div id="tab_${3+_counters.output}\n` + raw_toString(facts) + `\n</div>`;
+	document.getElementById('output_textarea').value = result;
 }
-function update_dictionary() {
-	const table = (a, neg = false) => {
-		let res = `<table>\n    <tr><th colspan="2">${neg?'variables':'symbols'}</th></tr>\n`;
-		for (let i = 1; i < a.length; i++) {
-			res += `    <tr><td class="dict-value">${a[i]}</td><td class="dict-index">${neg?'-':''}${i}</td></tr>\n`
+function addClass   (elem, c) { if (!elem.classList.contains(c)) elem.classList.add(c); }
+function removeClass(elem, c) { if ( elem.classList.contains(c)) elem.classList.remove(c); }
+function activate_tab(tab) {
+	// hide all tabs but the 'tab'
+	for (let i = 0; i < tabs.length; i++) {
+		const el_tab = document.getElementById(`tab_${tabs[i]}`);
+		const el_activator = document.getElementById(`tab_${tabs[i]}_activator`);
+		if (tabs[i] == tab) {
+			removeClass(el_tab, "hide");
+			addClass(el_activator, "active-tab-activator");
+		} else {
+			addClass(el_tab, "hide");
+			removeClass(el_activator, "active-tab-activator");
 		}
-		return res + `</table>\n`;
 	}
-	document.getElementById('dict_syms').innerHTML = table(s.p.d.syms);
-	document.getElementById('dict_vars').innerHTML = table(s.p.d.vars, true);
 }
 // output content raw facts from the db
 function get_raw_db() {
@@ -140,24 +146,20 @@ function get_raw_db() {
 	}
 	return t;
 }
-function raw_toString(raw) {
-	console.log('raw_toString', raw);
+function raw_toString(raw, negs = false) {
 	const arg_toString = (a, hilight = 'body') => {
 		if (a == 0) { return false; }
 		return `<span title="${a}"><sub class="varid">${a}</sub><span class="hilight_${hilight}${a<0?' hilight_variable':''}">${s.p.d.get(a)}</span></span>`;
 	}
 	const term_toString = (t, hilight = 'body') => {
-		console.log('term_toString t', t);
 		let res = '';
 		let from = 0; // slice from position
-		if (t.length === 4) { // raw term with neg in [0]
-			from = 1; // from=1 to skip neg
-			if (t[0] < 0) { // if neg add '~' punctuation
+		if (negs) { // raw term with neg in [0]
+			from = 1; // skip neg
+			if (t[0] < 0) { // if neg negative add '~' punctuation
 				res += '<span class="hilight_punctuation">~</span>';
 			}
-			t.shift();
 		}
-		console.log('t', t)
 		res += `${t.slice(from).map(a=>arg_toString(a, hilight)).filter(str=>str!==false).join(' ')}`;
 		return res;
 	}
@@ -178,26 +180,44 @@ function raw_toString(raw) {
 	}
 	return raw.map(rule_toString).join('');
 }
-function update_running_program() {
-	document.getElementById('running_program')
-		.innerHTML = raw_toString(s.raw);
-	update_dictionary();
+function update_input_program() {
+	const dict_out = (a, neg = false) => {
+		if (a.length === 1) return '';
+		let res = `# <strong>${neg?'variables':'symbols'}</strong>:<br/>\n# `;
+		for (let i = 1; i < a.length; i++) {
+			res += `<span title="${a[i]}"><sub class="varid">${neg?'-':''}${i}</sub>${a[i]}${i<a.length-1?', ':''}</span> `;
+			if (i < a.length-1 && i % 10 === 0) res += `<br/>\n#`;
+		}
+		return res + `<br/>\n`;
+	}
+	document.getElementById('dict_syms').innerHTML = dict_out(s.p.d.syms);
+	document.getElementById('dict_vars').innerHTML = dict_out(s.p.d.vars, true);
+	document.getElementById('input_program')
+		.innerHTML = raw_toString(s.raw, true);
 }
-function show_status() {
-	const rs = document.getElementById('running_status');
-	const ss = document.getElementById('step_status');
+function update_status() {
 	const sb = document.getElementById('stop_button');
-	rs.innerText = s.running ? 'true' : 'false';
-	ss.innerText = s.running ? s.step : 'n/a';
 	sb.classList = "button" + (s.running ? "" : " disabled-button");
+	// status-bar update
+	document.getElementById('status_bar').innerHTML = 'status: ' + (s.running
+		? '<span class="status running">' + (s.step > 0
+				? `running</span> step: <strong>${s.step}</strong>`
+				: `started</span>`)
+		: ((s.stopped
+				? `<span class="status stopped">stopped`
+				: `<span class="status finished">finished`) +
+			`</span> step: <strong>${s.step}</strong>`)) +
+		` nodes: <strong>${s.p.pdbs.length} + ${s.p.pprog.length}</strong>`;
 }
 function link() {
-	const href = window.location.href;
-	const prog = document.getElementById('logic_program').value;
-	href.search = 'prog=' + encodeURIComponent(prog);
-	const link = prompt(`Open URL in new window?\nOr copy to clipboard and cancel.`, href);
+	const prog = document.getElementById('editor_textarea').value;
+	const intro_id = get_intro_id(prog);
+	const search = intro_id === -1 ? 'prog=' + encodeURIComponent(prog) : `intro=${intro_id}`;
+	const loc = window.location.protocol + '//' + window.location.host +
+		window.location.pathname + '?' + search;
+	const link = prompt(`Open URL in new window?\nOr copy to clipboard and cancel.`, loc);
 	if (link != null) {
-		window.open(linke, '_blank');
+		window.open(link, '_blank');
 	}
 }
 // Returns a function, that, as long as it continues to be invoked, will not
@@ -226,11 +246,12 @@ function on_program_change() {
 	}
 }
 function init_playground() {
-	const prog = new URLSearchParams(window.location.search).get('prog');
+	const params = new URLSearchParams(window.location.search);
+	const prog = params.get('prog');
 	if (prog && prog.length > 0)  { // load prog from URL
-		document.getElementById('logic_program').value = prog;
+		document.getElementById('editor_textarea').value = prog;
 	} else { // or load intro if not in URL
-		intro(9);
+		intro(params.get('intro') || 0);
 	}
-	show_status();
+	update_status();
 }

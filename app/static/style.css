@@ -3,27 +3,64 @@
 }
 body {
 	font-family: Verdana, Geneva, sans-serif;
+	font-size: 0.8em;
 }
 h1, h2 {
 	margin: 0.2em 0;
 }
-textarea#logic_program {
-	width: 50%;
-	height: 18em;
-	margin-bottom: 1em;
+textarea {
+	margin: 0;
+	padding: 0;
 }
-textarea#output {
-	width: 50%;
-	height: 20em;
+
+#status_bar {
+	width: 100%;
+	background: #EEEEEE;
+	color: #000000;
+	border: 1px solid #999999;
+	padding: 0.3em 0.5em;
+	font-weight: bold;
+}
+#status_bar strong {
+	font-weight: normal;
+}
+span.status {
+	font-weight: normal;
+}
+span.running {
+	color: green;
+}
+span.stopped {
+	color: red;
+}
+span.finished {
+	color: black;
+}
+
+#editor textarea {
+	width: 100%;
+	height: 250px;
+}
+#tabs_activators {
+	margin-top: 0.8em;
+}
+#output textarea {
+	width: 100%;
+	height: 280px;
+}
+
+div.scroll-outer {
+	overflow: hidden;
+	height: 280px;
+}
+div.scroll-inner {
+	height: 280px;
+	overflow-y: auto;
 }
 div.panel {
 	float: left;
 	width: 50%;
-}
-div.dict {
-	width: 200px;
-	float: left;
-	font-size: 0.8em;
+	border: 1px solid #999999;
 }
 div.dict table {
 	width: 200px;
@@ -39,16 +76,18 @@ div.dict table th {
 	border: 1px solid black;
 	text-align: center;
 }
-
-#running_program {
-	font-size: 0.8em;
+.hide {
+	display: none;
+}
+#input_program {
+	margin-top: 1em;
 }
 @media only screen and (min-width: 748px) {
-	textarea#logic_program {
+	#editor textarea {
 		width: 720px;
 		height: 20em;
 	}
-	textarea#output {
+	#output textarea {
 		width: 720px;
 	}
 	div#tests {
@@ -56,12 +95,13 @@ div.dict table th {
 	}
 	div.panel{
 		float: left;
-		width: 730px;
+		width: 720px;
+	}
+	#status_bar {
+		width: 720px;
 	}
 }
 .hilight_variable,
-div#dict_vars.dict td.dict-value,
-div#dict_syms.dict td.dict-value
 {
 	font-weight: bold;
 	font-style: italic;
@@ -78,11 +118,30 @@ div#dict_syms.dict td.dict-value
 .hilight_body {
 	color: orange;
 }
+div.tab-activator {
+	float: left;
+	margin: 0;
+	margin-left: 0.1em;
+	width: 110px;
+	text-align: center;
+	border-width: 3px 2px 0 2px;
+	border-style: solid;
+	border-color: #999999;
+	background: #333333;
+	color: #FFFFFF;
+	padding: 0.1em 0.5em;
+	padding-bottom: 0.2em;
+	cursor: pointer;
+}
+div.active-tab-activator {
+	background: #AAAAAA!Important;
+}
 
 sub.varid {
 	color: #888888;
 	font-size: 0.4em;
 }
+.tab::after,
 .row::after {
 	content: "";
 	clear: both;
@@ -90,7 +149,7 @@ sub.varid {
 }
 div.bar-select {
 	margin-left: 1em;
-	width: 100px;
+	width: 120px;
 	float: left;
 }
 div.button,
@@ -111,7 +170,7 @@ div.active-button {
 	float: left;
 }
 .note {
-	margin-top: 1em;
+	margin-top: 0.3em;
 }
 .xx-small,
 .note {
@@ -135,4 +194,20 @@ span.copyleft {
 }
 #status-info {
 	display: none;
+}
+span.collapser {
+	display:inline-block;
+}
+.step-active span.collapser {
+	transform: rotate(90deg);
+}
+div.step-activator {
+	width: 100%;
+	border-color: #999999;
+	background: #666666;
+	color: #FFFFFF;
+	border: 2px solid #999999;
+}
+div.step-details {
+	padding-bottom: 1em;
 }

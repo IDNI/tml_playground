@@ -1,8 +1,9 @@
 let current_intro = 0; // current intro program chosen
+function get_intro_id(source) { return test_programs.indexOf(source); }
 function intro(n) {
 	n = n || 0;
 	// read current program from logic program textarea
-	const current = document.getElementById('logic_program').value;
+	const current = document.getElementById('editor_textarea').value;
 	let confirmed = true;
 	// ask for confirmation if current program running
 	// if (s.running) {
@@ -19,7 +20,7 @@ function intro(n) {
 	if (confirmed) {
 		// populate the logic program
 		const logic_program = document
-			.getElementById('logic_program');
+			.getElementById('editor_textarea');
 		logic_program.value = test_programs[n];
 		logic_program.scrollTop = 0; // scroll top
 		// deactivate old button and activate the new one
@@ -310,6 +311,7 @@ bird Coco.
 bird Charlie.
 wounded Charlie.
 
+# You can use negation in bodies
 canFly ?X :- bird ?X, ~wounded ?X.
 # ?X can fly if ?X is bird and is not wounded.
 # or simply: Not wounded bird can fly.
@@ -317,6 +319,21 @@ canFly ?X :- bird ?X, ~wounded ?X.
 # Coco and Charlie are birds but Charlie is
 # wounded. The only fact TML can infer here
 # is that Coco can fly.`,
+// NEGATION in heads
+`# You can use negation in heads
+
+e 1 2.
+e 2 3.
+e 3 4.
+e 4 5.
+e 5 1.
+notdone.
+t ?x ?y :- e ?x ?y, notdone.
+t ?x ?z :- t ?x ?y, e ?y ?z, notdone.
+~t ?x ?y :- e ?x ?y, done.
+done :- notdone.
+~notdone :- done.
+`,
 // TRANSITIVE CLOSURE
 `# Transitive closure of a directed graph is
 # simply another directed graph representing
