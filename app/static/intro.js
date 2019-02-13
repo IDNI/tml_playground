@@ -376,5 +376,38 @@ ancestor ?X ?Y :- parent ?X ?Z, ancestor ?Z ?Y.
 
 # This example is taken
 # from Datalog Educational System
-# http://des.sourceforge.net/`
+# http://des.sourceforge.net/`,
+// armageddon
+`# There are birds Charlie and Coco
+bird Charlie.
+bird Coco.
+
+# and there are humans John and Jane,
+human John.
+human Jane.
+
+# bird is a being
+being ?x :- bird ?x.
+
+# human is a being
+being ?x :- human ?x.
+
+# beings are mortal
+mortal ?x :- being ?x.
+
+# non-being is not a being
+nonBeing ?x :- ~being ?x.
+
+# if armageddon, then all mortals die
+dead ?x :- mortal ?x, armageddon.
+
+# what dies isn't bird/human/
+# mortal/being anymore
+~bird ?x :- dead ?x.
+~human ?x :- dead ?x.
+~mortal ?x :- dead ?x.
+~being ?x :- dead ?x.
+
+# uncomment the following line to end the world
+#armageddon.`
 ];
