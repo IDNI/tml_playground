@@ -386,6 +386,9 @@ bird Coco.
 human John.
 human Jane.
 
+# Uncomment the following line to end the world
+# armageddon.
+
 # bird is a being
 being ?x :- bird ?x.
 
@@ -406,8 +409,5 @@ dead ?x :- mortal ?x, armageddon.
 ~bird ?x :- dead ?x.
 ~human ?x :- dead ?x.
 ~mortal ?x :- dead ?x.
-~being ?x :- dead ?x.
-
-# uncomment the following line to end the world
-#armageddon.`
+~being ?x :- dead ?x.`
 ];
