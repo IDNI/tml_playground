@@ -210,9 +210,9 @@ function update_status() {
 		` nodes: <strong>${s.p.pdbs.length} + ${s.p.pprog.length}</strong>`;
 }
 function link() {
-	const prog = document.getElementById('editor_textarea').value + `\n`;
+	const prog = document.getElementById('editor_textarea').value;
 	const intro_id = get_intro_id(prog);
-	const search = intro_id === -1 ? 'prog=' + encodeURIComponent(prog) : `intro=${intro_id}`;
+	const search = intro_id === -1 ? 'prog=' + encodeURIComponent(prog + `\n`) : `intro=${intro_id}`;
 	const loc = window.location.protocol + '//' + window.location.host +
 		window.location.pathname + '?' + search;
 	const link = prompt(`Open URL in new window?\nOr copy to clipboard and cancel.`, loc);
