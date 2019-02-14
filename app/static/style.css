@@ -59,7 +59,6 @@ div.scroll-inner {
 }
 div.panel {
 	float: left;
-	width: 50%;
 	border: 1px solid #999999;
 }
 div.dict table {
@@ -78,6 +77,10 @@ div.dict table th {
 }
 .hide {
 	display: none;
+}
+#editor,
+#output {
+	width: 100%;
 }
 @media only screen and (min-width: 748px) {
 	#editor textarea {
