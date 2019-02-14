@@ -429,9 +429,6 @@ being ?x :- human ?x.
 # beings are mortal
 mortal ?x :- being ?x.
 
-# non-being is not a being
-nonBeing ?x :- ~being ?x.
-
 # if armageddon, then all mortals die
 dead ?x :- mortal ?x, armageddon.
 
@@ -440,5 +437,21 @@ dead ?x :- mortal ?x, armageddon.
 ~bird ?x :- dead ?x.
 ~human ?x :- dead ?x.
 ~mortal ?x :- dead ?x.
-~being ?x :- dead ?x.`
+~being ?x :- dead ?x.`,
+// UNSAT
+`# Following program does 6 steps and returns
+# to the state where it initially started.
+#
+# TML has to stop and outputs: unsat
+#
+# Not stopping would cause an infinite loop
+
+start.
+running :- start.
+~start :- running.
+stop :- running.
+~running :- stop.
+start :- stop.
+~stop :- start.
+`
 ];
