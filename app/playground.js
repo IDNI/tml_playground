@@ -31,9 +31,11 @@ function start() {
 		source = lp.string_read_text(source);
 		s.raw = s.p.prog_read(source);
 		update_input_program();
+		output_result(s.p.toString());
 	} catch (err) { // parse error
 		console.log('Parse error:', err);
 		s.result = `Parse error: ${err}`;
+		s.running = false;
 	}
 	update_status();
 }
@@ -45,7 +47,6 @@ function stop() {
 	s.running = false;
 	s.stopped = true;
 	update_status();
-	output_result(s.p.toString());
 }
 function rerun() { s.running = false; run(); }
 function run() { step(0); }
@@ -75,14 +76,13 @@ function step(n = 1) {
 				s.result = s.p.toString(); // sat
 			} else {
 				s.result = 'unsat';
-				document.getElementById('output_textarea').value = s.result;
 			}
 			s.d = 0;
 			s.running = false;
+			output_result(s.result);
 			break;
-		} else {
-			output_result(s.p.toString());
 		}
+		output_result(s.result);
 	}
 	update_status();
 }
@@ -102,7 +102,7 @@ function output_result(result) {
 		`	<div id="step_${s.step}_details" class="step-details">\n` + raw_toString(facts) + `\n</div>`
 	document.getElementById('steps').insertAdjacentElement("beforeend", s_div);
 	if (s.step > 0) { // collapse previous step
-		addClass(document.getElementById(`step_${s.step}_details`), "hide");
+		addClass(document.getElementById(`step_${s.step-1}_details`), "hide");
 	}
 	// sort output if sort-result checked
 	if (document.getElementById('sort_result').checked) {
@@ -178,10 +178,12 @@ function raw_toString(raw, negs = false) {
 		return res;
 	}
 	const rendered = raw.map(rule_toString).join('');
-	const legend = '# <strong>legend</strong>:<br/>\n# <sub class="dictid">var/sym id</sub><span class="hilight_fact">facts</span>' +
+	if (!negs) return rendered;
+	const legend = (rendered.length > 0 ? `<br/>\n` : '') +
+		'# <strong>legend</strong>:<br/>\n# <sub class="dictid">var/sym id</sub><span class="hilight_fact">facts</span>' +
 		(negs ? `, <span class="hilight_head">heads (adds)</span>, <span class="hilight_negative_head">negative heads (dels)</span>, `+
 			`<span class="hilight_body">bodies (conditions)</span>` : '');
-	return rendered + (rendered.length > 0 ? `<br/>\n` : '') + legend;
+	return rendered + legend;
 }
 function update_input_program() {
 	const dict_out = (a, vars = false) => {
