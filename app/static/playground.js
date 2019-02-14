@@ -58,8 +58,7 @@ function step(n = 1) {
 	for (let i = 0; n === 0 || i < n; i++) {
 		s.d = s.p.db;  // get current db root
 		s.s.push(s.d); // store current db root into previous steps
-		console.log(`step: ${++s.step} nodes: ${s.p.pdbs.length}` +
-			` + ${s.p.pprog.length}\n`);
+		++s.step;
 		try {
 			s.p.step(); // do pfp step
 		} catch (err) {
@@ -76,10 +75,10 @@ function step(n = 1) {
 				s.result = s.p.toString(); // sat
 			} else {
 				s.result = 'unsat';
+				document.getElementById('output_textarea').value = s.result;
 			}
 			s.d = 0;
 			s.running = false;
-			output_result(s.result);
 			break;
 		}
 		output_result(s.p.toString());
