@@ -73,6 +73,7 @@ function step(n = 1) {
 		if (s.s.includes(s.p.db)) {
 			if (s.d === s.p.db) {
 				s.result = s.p.toString(); // sat
+				output_result(s.p.toString());
 			} else {
 				s.result = 'unsat';
 				document.getElementById('output_textarea').value = s.result;
@@ -81,7 +82,6 @@ function step(n = 1) {
 			s.running = false;
 			break;
 		}
-		output_result(s.p.toString());
 	}
 	update_status();
 }
