@@ -247,12 +247,6 @@ function on_program_change() {
 	}
 	return true;
 }
-function on_live_coding_change() {
-	if (document.getElementById('live_coding').checked) {
-		debounce_live_coding();
-	}
-	return true;
-}
 function init_playground() {
 	const params = new URLSearchParams(window.location.search);
 	const prog = params.get('prog');
