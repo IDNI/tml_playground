@@ -105,7 +105,7 @@ function output_result(result) {
 		addClass(document.getElementById(`step_${s.step}_details`), "hide");
 	}
 	// sort output if sort-result checked
-	if (document.getElementById('sort-result').checked) {
+	if (document.getElementById('sort_result').checked) {
 		result = result.split(`\n`).sort().join(`\n`);
 	}
 	result = result.trim();
@@ -132,7 +132,7 @@ function activate_tab(tab) {
 function get_raw_db() {
 	const p = s.p;
 	let t = p.pdbs.from_bits(p.db, p.bits, p.ar, 1).map(t=>[t]);
-	if (document.getElementById('sort-result').checked) {
+	if (document.getElementById('sort_result').checked) {
 		const cmp = (a, b) => {
 			const l = a.length < b.length ? a.length : b.length;
 			for (let i = 0; i < l; i++) {
@@ -149,15 +149,16 @@ function get_raw_db() {
 function raw_toString(raw, negs = false) {
 	const arg_toString = (a, hilight = 'body') => {
 		if (a == 0) { return false; }
-		return `<span title="${a}"><sub class="varid">${a}</sub><span class="hilight_${hilight}${a<0?' hilight_variable':''}">${s.p.d.get(a)}</span></span>`;
+		const str = s.p.d.get(a);
+		return `<span title="${str}"><sub class="dictid">${a}</sub><span class="hilight_${hilight}${a<0?' hilight_variable':''}">${str}</span></span>`;
 	}
 	const term_toString = (t, hilight = 'body') => {
 		const neg = negs && (t[0] < 0);
-		const del_head = neg && (hilight === 'head');
+		const negative_head = neg && (hilight === 'head');
 		return (neg // if neg negative add '~'
-				? `<span class="hilight_${del_head ? 'del_head' : hilight}">~</span>`
+				? `<span class="hilight_${negative_head ? 'negative_head' : hilight}">~</span>`
 				: '') +
-			t.slice(negs?1:0).map(a => arg_toString(a, del_head ? 'del_head' : hilight))
+			t.slice(negs?1:0).map(a => arg_toString(a, negative_head ? 'negative_head' : hilight))
 				.filter(str=>str!==false)
 				.join(' ');
 	}
@@ -177,8 +178,8 @@ function raw_toString(raw, negs = false) {
 		return res;
 	}
 	const rendered = raw.map(rule_toString).join('');
-	const legend = '# <strong>legend</strong>:<br/>\n# <sub class="varid">varid</sub><span class="hilight_fact">facts</span>' +
-		(negs ? `, <span class="hilight_head">heads (adds)</span>, <span class="hilight_del_head">negative heads (dels)</span>, `+
+	const legend = '# <strong>legend</strong>:<br/>\n# <sub class="dictid">var/sym id</sub><span class="hilight_fact">facts</span>' +
+		(negs ? `, <span class="hilight_head">heads (adds)</span>, <span class="hilight_negative_head">negative heads (dels)</span>, `+
 			`<span class="hilight_body">bodies (conditions)</span>` : '');
 	return rendered + (rendered.length > 0 ? `<br/>\n` : '') + legend;
 }
@@ -186,7 +187,7 @@ function update_input_program() {
 	const dict_out = (a, vars = false) => {
 	let res = `#<br/>\n# <strong>${vars?'variables':'symbols'}</strong>:${a.length===1?' n/a':'<br/>\n# '}`;
 		for (let i = 1; i < a.length; i++) {
-			res += `<sub class="varid">${vars?'-':''}${i}</sub><span title="${a[i]}"${vars?` class="hilight_variable"`:''}>${a[i]}${i<a.length-1?', ':''}</span> `;
+			res += `<sub class="dictid">${vars?'-':''}${i}</sub><span title="${a[i]}"${vars?` class="hilight_variable"`:''}>${a[i]}${i<a.length-1?', ':''}</span> `;
 			if (i < a.length-1 && i % 10 === 0) res += `<br/>\n#`;
 		}
 		return res + `<br/>\n`;
@@ -244,6 +245,13 @@ function on_program_change() {
 	if (document.getElementById('live_coding').checked) {
 		debounce_live_coding();
 	}
+	return true;
+}
+function on_live_coding_change() {
+	if (document.getElementById('live_coding').checked) {
+		debounce_live_coding();
+	}
+	return true;
 }
 function init_playground() {
 	const params = new URLSearchParams(window.location.search);

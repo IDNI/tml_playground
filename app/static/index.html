@@ -10,83 +10,94 @@
 		<link rel="stylesheet" type="text/css" href="style.css" />
 	</head>
 	<body onload="init_playground()">
-		<h1>TML playground</h1>
-		<div id="tool_bar" class="row">
-			<div id="link_button" title="get link to this program" onclick="link()"
-				class="button">&#128279;</div>
-			<div id="run_button"  title="run program"  onclick="run()"
-				class="button">&#9654;</div>
-			<div id="step_button" title="do a step" onclick="step()"
-				class="button">&#9654;&#9646;</div>
-			<div id="stop_button" title="stop running" onclick="stop()"
-				class="button disabled-button" >&#9724;</div>
-			<div class="bar-select">
-				<select id="tests-select" onchange="intro(document.getElementById('tests-select').value)">
-					<option value="0">intro</option>
-					<option value="1">FACTS</option>
-					<option value="2">RELATIONS</option>
-					<option value="3">ARITY</option>
-					<option value="4">RULES</option>
-					<option value="5">VARIABLES</option>
-					<option value="6">AND/OR</option>
-					<option value="7">RECURSION</option>
-					<option value="8">TRANSITIVE CLOSURE</option>
-					<option value="9">NEGATION</option>
-					<option value="10">DELETION</option>
-					<option value="11">family</option>
-					<option value="12">armageddon</option>
-				</select>
-			</div>
-			<div>
-				<input id="live_coding" type="checkbox" checked="true" />&nbsp;<span class="xx-small"> live coding</span>
-				<input id="sort-result" type="checkbox" checked="true" />
-				<span class="xx-small"> sort output</span>
-			</div>
-		</div>
-		<div id="editor_wrapper" class="row">
-			<div id="editor" class="panel">
-				<textarea id="editor_textarea" oninput="on_program_change()""></textarea>
-			</div>
-		</div>
-		<div class="row">
-			<div id="status_bar"></div>
-		</div>
-		<div id="tabs_activators" class="row">
-			<div id="tab_input_activator" class="tab-activator"  onclick="activate_tab('input')">input</div>
-			<div id="tab_steps_activator" class="tab-activator"  onclick="activate_tab('steps')">steps</div>
-			<div id="tab_output_activator" class="tab-activator active-tab-activator" onclick="activate_tab('output')">output</div>
-		</div>
-		<div id="tab_output" class="tab">
-			<div id="output" class="panel">
-				<textarea id="output_textarea"></textarea>
-			</div>
-		</div>
-		<div id="tab_input" class="row tab hide scroll-outer">
-			<div id="input" class="panel scroll-inner">
-				<div class="row"><div id="input_program"></div></div>
-				<div class="row"><div id="legend"></div></div>
-				<div class="row"><div id="dict_vars" class="dict"></div></div>
-				<div class="row"><div id="dict_syms" class="dict"></div></div>
-			</div>
-		</div>
-		<div id="tab_steps" class="row tab scroll-outer hide">
-			<div id="steps" class="panel scroll-inner">
-			</div>
-		</div>
-		<div class="row">
-			<div class="note">
-				For more information about Tauchain and TML see
-				<a href="https://github.com/idni/tau/">Tau's github</a>,
-				<a href="http://idni.org/">http://idni.org/</a> or
-				<a href="https://github.com/idni/tau#tml-tutorial-unfinished-draft"
-					>TML Tutorial (Unfinished draft)</a>.
-				<br />
-				<a href="https://github.com/IDNI/tml_playground">Source</a>
-				of the playground |
-				<span class="copyleft" title="copyleft">&copy;</span>
-				2019 Tomáš Klapka
-				&lt;<a href="mailto:tomas@klapka.cz">tomas@klapka.cz</a>&gt;
-				<br />
+		<div id="wrapper">
+			<div id="content">
+				<h1>TML playground</h1>
+				<div id="intro_bar" class="row">
+					<div id="intro_select" class="bar-select">
+						<select id="tests-select" onchange="intro(document.getElementById('tests-select').value)">
+							<option value="0">intro</option>
+							<option value="1">FACTS</option>
+							<option value="2">RELATIONS</option>
+							<option value="3">ARITY</option>
+							<option value="4">RULES</option>
+							<option value="5">VARIABLES</option>
+							<option value="6">AND/OR</option>
+							<option value="7">RECURSION</option>
+							<option value="8">TRANSITIVE CLOSURE</option>
+							<option value="9">NEGATION</option>
+							<option value="10">DELETION</option>
+							<option value="11">family</option>
+							<option value="12">armageddon</option>
+						</select>
+					</div>
+				</div>
+				<div id="tool_bar" class="row">
+					<div id="link_button" title="get link to this program" onclick="link()"
+						class="button">&#128279;</div>
+					<div id="run_button"  title="run program"  onclick="run()"
+						class="button">&#9654;</div>
+					<div id="step_button" title="do a step" onclick="step()"
+						class="button">&#9654;&#9646;</div>
+					<div id="stop_button" title="stop running" onclick="stop()"
+						class="button disabled-button" >&#9724;</div>
+					<div id="options_bar">
+						<span>
+							<input id="live_coding" type="checkbox" checked="true" onchange="on_program_change()" />&nbsp;
+							<label for="live_coding" class="xx-small">live coding</label>
+						</span>
+						<span>
+							<input id="sort_result" type="checkbox" checked="true" onchange="on_program_change()" />
+							<label for="sort_result" class="xx-small">sort output</label>
+						</span>
+					</div>
+				</div>
+				<div class="row textarea-wrapper">
+					<div id="editor" class="panel">
+						<textarea id="editor_textarea" oninput="on_program_change()""></textarea>
+					</div>
+				</div>
+				<div class="row">
+					<div id="status_bar"></div>
+				</div>
+				<div id="tabs_activators" class="row">
+					<div id="tab_input_activator" class="tab-activator"  onclick="activate_tab('input')">input</div>
+					<div id="tab_steps_activator" class="tab-activator"  onclick="activate_tab('steps')">steps</div>
+					<div id="tab_output_activator" class="tab-activator active-tab-activator" onclick="activate_tab('output')">output</div>
+				</div>
+				<div id="tab_output" class="tab">
+					<div id="output" class="panel">
+						<textarea id="output_textarea"></textarea>
+					</div>
+				</div>
+				<div id="tab_input" class="tab hide scroll-outer">
+					<div id="input" class="panel scroll-inner">
+						<div class="row"><div id="input_program"></div></div>
+						<div class="row"><div id="legend"></div></div>
+						<div class="row"><div id="dict_vars" class="dict"></div></div>
+						<div class="row"><div id="dict_syms" class="dict"></div></div>
+					</div>
+				</div>
+				<div id="tab_steps" class="tab scroll-outer hide">
+					<div id="steps" class="panel scroll-inner">
+					</div>
+				</div>
+				<div class="row">
+					<div class="note">
+						For more information about Tauchain and TML see
+						<a href="https://github.com/idni/tau/">Tau's github</a>,
+						<a href="http://idni.org/">http://idni.org/</a> or
+						<a href="https://github.com/idni/tau#tml-tutorial-unfinished-draft"
+							>TML Tutorial (Unfinished draft)</a>.
+						<br />
+						<a href="https://github.com/IDNI/tml_playground">Source</a>
+						of the playground |
+						<span class="copyleft" title="copyleft">&copy;</span>
+						2019 Tomáš Klapka
+						&lt;<a href="mailto:tomas@klapka.cz">tomas@klapka.cz</a>&gt;
+						<br />
+					</div>
+				</div>
 			</div>
 		</div>
 		<!-- tml.min.js       (19 kB) -->
