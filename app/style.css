@@ -18,11 +18,11 @@ sub.dictid { color: #888888; font-size: 0.4em; }
 
 /* layout */
 #wrapper,
-#content,
 #editor,
 #output,
 div.tab,
 div.panel { width: 100%; min-width: 337px; }
+#content { min-width: 337px; max-width: 720px; margin: 0 auto; }
 
 #output textarea { width: 100%; height: 280px; }
 #editor textarea { width: 100%; height: 250px; }
@@ -36,8 +36,6 @@ div.panel { float: left; border: 1px solid #999999; }
 
 /* limit width on wide screens */
 @media only screen and (min-width: 735px) {
-	#wrapper,
-	#content,
 	.textarea-wrapper textarea,
 	div.tab,
 	div.panel { width: 720px; }
