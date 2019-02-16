@@ -1,0 +1,20 @@
+{
+  "name": "tml_playground",
+  "version": "0.0.1",
+  "private": true,
+  "main": "app/index.html",
+  "license": "SEE LICENSE",
+  "scripts": {
+    "watch": "node_modules/.bin/watchify --ignore tml -r ./src/index.js:tml_playground -d -o app/js/tml_playground.wmap.js",
+    "bundle_debug": "mkdir -p app/js && node_modules/.bin/browserify --ignore tml -r ./src/index.js:tml_playground -d > app/js/tml_playground.wmap.js",
+    "bundle": "mkdir -p app/js && node_modules/.bin/browserify --ignore tml -r ./src/index.js:tml_playground > app/js/tml_playground.js",
+    "minify": "node_modules/.bin/terser app/js/tml_playground.js > app/js/tml_playground.min.js",
+    "build": "npm run-script bundle && npm run-script minify",
+    "build_all": "npm run-script build"
+  },
+  "devDependencies": {
+    "browserify": "latest",
+    "terser": "latest",
+    "watchify": "^3.11.0"
+  }
+}

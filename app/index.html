@@ -9,13 +9,13 @@
 		<link rel="icon" href="data:,">
 		<link rel="stylesheet" type="text/css" href="style.css" />
 	</head>
-	<body onload="init_playground()">
+	<body onload="init()">
 		<div id="wrapper">
 			<div id="content">
 				<h1>TML playground</h1>
 				<div id="intro_bar" class="row">
 					<div id="intro_select" class="bar-select">
-						<select id="tests-select" onchange="intro(document.getElementById('tests-select').value)">
+						<select id="tests-select" onchange="load_intro(document.getElementById('tests-select').value)">
 							<option value="0">intro</option>
 							<option value="1">FACTS</option>
 							<option value="2">RELATIONS</option>
@@ -101,12 +101,27 @@
 				</div>
 			</div>
 		</div>
+		<script>
+		</script>
 		<!-- tml.min.js       (19 kB) -->
 		<!-- tml.debug.min.js (32 kB) -->
 		<!-- tml.js           (36 kB) -->
 		<!-- tml.debug.js     (56 kB) -->
 		<script src="tml.js/tml.min.js"></script>
-		<script src="playground.js"></script>
-		<script src="intro.js"></script>
+		<script src="js/tml_playground.min.js"></script>
+		<script>
+			console.log('starting');
+			const { lp } = require('tml');
+			const { ui, state } = require('tml_playground');
+			const s = state.create(lp);
+			function init() {};
+			function load_intro(n) { s.load_intro(n); }
+			function run()  { s.run(); }
+			function step() { s.step(); }
+			function stop() { s.stop(); }
+			function link() { ui.link() };
+			function on_program_change(e) { ui.on_program_change(e); }
+			function activate_tab(tab) { ui.activate_tab(tab); }
+		</script>
 	</body>
 </html>

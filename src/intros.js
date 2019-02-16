@@ -1,42 +1,9 @@
-let current_intro = 0; // current intro program chosen
-function get_intro_id(source) { return test_programs.indexOf(source); }
-function intro(n) {
-	n = n || 0;
-	// read current program from logic program textarea
-	const current = document.getElementById('editor_textarea').value;
-	let confirmed = true;
-	// ask for confirmation if current program running
-	// if (s.running) {
-	// 	confirmed = confirmed
-	// 		&& confirm('Program is running. Do you want to stop?')
-	// 	if (confirmed) stop();
-	// }
-	// if there is a custom program, ask for confirmation before discarding
-	if (current && current.length > 0
-	&& !test_programs.includes(current)) {
-		confirmed = confirmed
-			&& confirm('Do you want to discard your program?');
-	}
-	if (confirmed) {
-		// populate the logic program
-		const logic_program = document
-			.getElementById('editor_textarea');
-		logic_program.value = test_programs[n];
-		logic_program.scrollTop = 0; // scroll top
-		// deactivate old button and activate the new one
-		// document.getElementById('t'+t).className = 'button';
-		current_intro = n;
-		// document.getElementById('t'+t).className = 'active-button';
-		if (document.getElementById('live_coding').checked) {
-			rerun();
-		} else {
-			restart();
-		}
-	}
-	// update (or rollback) selection
-	document.getElementById('tests-select').value = current_intro;
+const intros = {
+	// if is intro in text, return it's index, otherwise return -1
+	find_intro: (text) => { return intros.programs.indexOf(text); }
 }
-const test_programs = [
+module.exports = intros;
+intros.programs = [
 // intro
 `# Enter your TML logic program here and
 # press RUN to execute.
