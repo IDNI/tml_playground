@@ -1,0 +1,45 @@
+body, textarea {
+	background-color: #000000;
+	color: #999999;
+}
+a { color: #CCCCCC; }
+
+.hilight_punctuation { color: #a53872; }
+
+#status_bar {
+	background: #000000;
+	color: #999999;
+	border-color: #333333;
+}
+span.finished { color: #999999; }
+div.panel { border-color: #333333; }
+
+/* button/tool bar */
+div.button,
+div.active-button {
+	border-color: #333333;
+	background: #222222;
+	color: #999999;
+}
+.active-button { background: #666666!Important; }
+.disabled-button {
+	border-color: #AAAAAA!Important;
+	background: #999999!Important;
+	color: #AAAAAA!Important;
+}
+
+/* tabs */
+div.tab-activator {
+	border-color: #333333;
+	background: #222222;
+	color: #999999;
+}
+div.active-tab-activator { background: #666666!Important; }
+
+/* steps tab */
+div.step-activator {
+	border-color: #333333;
+	background: #999999;
+	color: #333333;
+}
+

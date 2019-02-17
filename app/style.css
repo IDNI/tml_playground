@@ -1,5 +1,6 @@
 * { box-sizing: border-box; }
-body { font-family: Verdana, Geneva, sans-serif; font-size: 0.8em; }
+body { font-family: Verdana, Geneva, sans-serif; font-size: 14px; }
+body, textarea { border: 0px; }
 table { border-collapse: collapse; }
 table, tr, th, td { border: 0; }
 textarea { margin: 0; padding: 0; }
@@ -7,14 +8,16 @@ h1, h2 { margin: 0.2em 0; }
 .hide { display: none; }
 .xx-small { font-size: xx-small; }
 
+a { color: #000000; }
+
 /* syntax hilighting */
-.hilight_fact { color: blue; }
-.hilight_head { color: green; }
-.hilight_negative_head { color: red; }
-.hilight_body { color: orange; }
+.hilight_fact { color: #0077FF; }
+.hilight_head { color: #008000; }
+.hilight_negative_head { color: #ff0000; }
+.hilight_body { color: #dd8800; }
 .hilight_punctuation { color: #a53872; }
 .hilight_variable { font-weight: bold; font-style: italic; }
-sub.dictid { color: #888888; font-size: 0.4em; }
+sub.dictid { color: #888888; font-size: 0.5em; }
 
 /* layout */
 #wrapper,
@@ -24,12 +27,18 @@ div.tab,
 div.panel { width: 100%; min-width: 337px; }
 #content { min-width: 337px; max-width: 720px; margin: 0 auto; }
 
-#output textarea { width: 100%; height: 280px; }
-#editor textarea { width: 100%; height: 250px; }
+#output textarea { width: 100%; height: 278px; }
+#editor textarea { width: 100%; height: 248px; }
 #tabs_activators { margin-top: 0.8em; }
 div.scroll-outer { overflow: hidden; height: 280px; }
 div.scroll-inner { height: 280px; overflow-y: auto; }
 div.panel { float: left; border: 1px solid #999999; }
+div.flex {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+div.expand { flex: 1 }
 
 .tab::after,
 .row::after { content: ""; clear: both; display: table; }
@@ -42,7 +51,7 @@ div.panel { float: left; border: 1px solid #999999; }
 }
 
 /* footnote and copyleft */
-.note { font-size: xx-small; margin-top: 0.3em; }
+.note { font-size: 0.7em; margin-top: 0.3em; }
 span.copyleft {
 	display:inline-block;
 	-moz-transform: scale(-1, 1);
@@ -56,7 +65,8 @@ span.copyleft {
 #intro_select { float: right; }
 div.bar-select {
 	margin-left: 1em;
-	width: 120px;
+	width: 200px;
+	text-align: right;
 	float: left;
 }
 
@@ -94,14 +104,15 @@ div.active-button {
 	background: #EEEEEE;
 	color: #000000;
 	border: 1px solid #999999;
+	border-top: 0px;
 	padding: 0.3em 0.5em;
 	font-weight: bold;
 }
 #status_bar strong { font-weight: normal; }
 span.status { font-weight: normal; }
-span.running { color: green; }
-span.stopped { color: red; }
-span.finished { color: black; }
+span.running { color: #008000; }
+span.stopped { color: #ff0000; }
+span.finished { color: #000000; }
 
 /* tabs */
 div.tab-activator {

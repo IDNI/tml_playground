@@ -35,7 +35,7 @@ class state {
 			const raw = this.p.prog_read(source);
 			ui.update_input_tab(raw);
 			ui.add_step_output();
-			ui.output_result(raw);
+			ui.output_result(ui.raw_toString(raw));
 		} catch (err) { // parse error
 			console.log('Parse error:', err);
 			this.error = `Parse error: ${err}`;
@@ -114,8 +114,6 @@ class state {
 	// TODO: move this to tml.js?
 	get_raw_db(sort = false) {
 		const p = this.p;
-		console.log('p', p);
-		console.log('this:', this);
 		let t = p.pdbs.from_bits(p.db, p.bits, p.ar, 1).map(t => [t]);
 		if (sort) {
 			const cmp = (a, b) => {

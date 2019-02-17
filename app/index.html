@@ -8,6 +8,7 @@
 		<meta name="Description" content="Online playground for TML (Tau Meta Language) with examples." />
 		<link rel="icon" href="data:,">
 		<link rel="stylesheet" type="text/css" href="style.css" />
+		<link rel="stylesheet" type="text/css" href="dark.css" id="theme" />
 	</head>
 	<body onload="init()">
 		<div id="wrapper">
@@ -45,16 +46,20 @@
 					<div id="options_bar">
 						<span>
 							<input id="live_coding" type="checkbox" checked="true" onchange="on_program_change()" />&nbsp;
-							<label for="live_coding" class="xx-small">live coding</label>
+							<label for="live_coding" class="xx-small">live</label>
 						</span>
 						<span>
 							<input id="sort_result" type="checkbox" checked="true" onchange="on_program_change()" />
-							<label for="sort_result" class="xx-small">sort output</label>
+							<label for="sort_result" class="xx-small">sort</label>
+						</span>
+						<span>
+							<input id="dark_mode" type="checkbox" checked="true" onchange="update_dark_mode()" />
+							<label for="dark_mode" class="xx-small">dark</label>
 						</span>
 					</div>
 				</div>
-				<div class="row textarea-wrapper">
-					<div id="editor" class="panel">
+				<div class="row textarea-wrapper flex">
+					<div id="editor" class="panel expand">
 						<textarea id="editor_textarea" oninput="on_program_change()""></textarea>
 					</div>
 				</div>
@@ -67,7 +72,7 @@
 					<div id="tab_output_activator" class="tab-activator active-tab-activator" onclick="activate_tab('output')">OUTPUT</div>
 				</div>
 				<div id="tab_output" class="tab">
-					<div id="output" class="panel">
+					<div id="output" class="panel expand">
 						<textarea id="output_textarea"></textarea>
 					</div>
 				</div>
@@ -122,6 +127,7 @@
 			function link() { ui.link() };
 			function on_program_change(e) { ui.on_program_change(e); }
 			function activate_tab(tab) { ui.activate_tab(tab); }
+			function update_dark_mode() { ui.update_dark_mode(); }
 		</script>
 	</body>
 </html>

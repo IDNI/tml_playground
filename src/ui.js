@@ -1,5 +1,5 @@
 const { $, debounce, checked, add_class, remove_class,
-	update_location_url, add_trailing_nl, get_title,
+	update_location_url, add_trailing_nl, get_title, get_link,
 	get_link_with_updated_search } = require('./util');
 const { find_intro } = require('./intros');
 
@@ -7,6 +7,7 @@ let s = {}; // state
 const tabs = Object.freeze([ 'output', 'input', 'steps' ]);
 
 function clear_steps_tab() { $('steps').innerText = ''; }
+function rerun() { s.stop(); s.run(); }
 function debounce_live_coding () { return debounce(rerun, 200); }
 function on_program_change() {
 	if (checked('live_coding')) {
@@ -32,10 +33,6 @@ function activate_tab(tab) {
 			remove_class($(`tab_${tabs[i]}_activator`), "active-tab-activator");
 		}
 	}
-}
-function toggle_step_details(step) {
-	$(`step_${step}_details`).classList.toggle("hide");
-	$(`step_${step}_activator`).classList.toggle("step-active");
 }
 function update_input_tab(raw) {
 	const dict_out = (a, vars = false) => {
@@ -75,20 +72,24 @@ function output_result(result) {
 	// update output textarea
 	update_output_text(result.trim());
 }
+function toggle_step_details(step) {
+	$(`step_${step}_details`).classList.toggle("hide");
+	$(`step_${step}_activator`).classList.toggle("step-active");
+}
 function add_step_output(result) {
 	// add step output from raw db
 	const facts = s.get_raw_db(checked('sort_result'));
 	const s_div = document.createElement('div');
 	s_div.id = `step_${s.sc}`;
 	s_div.innerHTML =
-		`	<div id="step_${s.sc}_activator" class="step-activator" onclick="toggle_step_details(${s.sc})">` +
+		`	<div id="step_${s.sc}_activator" class="step-activator step-active" onclick="ui.toggle_step_details(${s.sc})">` +
 		`STEP ${s.sc} <span class="collapser">&#9654;</span>` +
 		(s.p ? ` nodes: ${s.p.pdbs.length} + ${s.p.pprog.length}` : '') +
 		`</div>\n` +
 		`	<div id="step_${s.sc}_details" class="step-details">\n` + raw_toString(facts) + `\n</div>`
 	$('steps').insertAdjacentElement("beforeend", s_div);
 	if (s.sc > 0) { // collapse previous step
-		add_class($(`step_${s.sc-1}_details`), "hide");
+		toggle_step_details(s.sc-1);
 	}
 }
 function raw_toString(raw, negs = false) {
@@ -143,10 +144,15 @@ function inject_state(state) {
 	s = state;
 }
 
+function update_dark_mode() {
+	$('theme').href = checked('dark_mode') ? 'dark.css' : 'light.css';
+}
+
 module.exports = {
 	inject_state,
 	tabs, link, clear_steps_tab, debounce_live_coding, on_program_change,
 	activate_tab, toggle_step_details, update_input_tab,
 	get_editor_text, update_editor_text, update_output_text,
-	update_status_bar, output_result, add_step_output, raw_toString
+	update_status_bar, output_result, add_step_output, raw_toString,
+	update_dark_mode
 }
