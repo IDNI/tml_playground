@@ -1,6 +1,6 @@
 const $ = id => document.getElementById(id); // just a shortcut (jQuery like)
 
-const add_trailing_nl = to => to + to[to.length-1]==`\n` ? '' : `\n`;
+const add_trailing_nl = to => to + (to[to.length-1]===`\n` ? '' : `\n`);
 
 function checked(id) { return $(id).checked; } // checkbox checker
 

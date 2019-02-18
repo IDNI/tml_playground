@@ -7,16 +7,27 @@ let s = {}; // state
 const tabs = Object.freeze([ 'output', 'input', 'steps' ]);
 
 function clear_steps_tab() { $('steps').innerText = ''; }
-function rerun() { s.stop(); s.run(); }
-function debounce_live_coding () { return debounce(rerun, 200); }
+function rerun()  { console.log('rerun'); s.rerun(); }
+function reload() { console.log('reload'); s.reload(); }
+function debounce_autorun () { return debounce(rerun, 200); }
+function debounce_autoload() { return debounce(reload, 200); }
 function on_program_change() {
-	if (checked('live_coding')) {
-		debounce_live_coding();
+	console.log(`on_program_change`);
+	if (checked('autorun')) {
+		console.log('debounce_autorun');
+		debounce_autorun();
+	} else {
+		if (checked('autoload')) {
+			console.log('debounce_autoload');
+			debounce_autoload();
+		}
 	}
-	const intro_id = find_intro(ui.get_editor_text());
+	// update location url
+	const text = get_editor_text();
+	const intro_id = find_intro(text);
 	const search = intro_id === -1 // no intro in editor
 		? 'prog=' +
-			encodeURIComponent(add_trailing_nl(get_editor_text()))
+			encodeURIComponent(add_trailing_nl(text))
 			.replace(/%20/g, '+') // post-encode spaces as pluses
 		: `intro=${intro_id}`;
 	update_location_url(get_title(), get_link_with_updated_search(search));
@@ -50,19 +61,14 @@ function update_input_tab(raw) {
 function get_editor_text() { return $('editor_textarea').value; }
 function update_editor_text(text) { $('editor_textarea').value = text; }
 function update_output_text(text) { $('output_textarea').value = text; }
-function update_status_bar() {
+function update_status(msg = null) {
 	const sb = $('stop_button');
-	sb.classList = "button" + (s.running ? "" : " disabled-button");
+	sb.classList = "button" + (s.is_running() ? "" : " disabled-button");
 	// status-bar update
-	$('status_bar').innerHTML = 'status: ' + (s.running
-		? '<span class="status running">' + (s.sc > 0
-				? `running</span> step: <strong>${s.sc}</strong>`
-				: `started</span>`)
-		: ((s.stopped
-				? `<span class="status stopped">stopped`
-				: `<span class="status finished">finished`) +
-			`</span> step: <strong>${s.sc}</strong>`)) +
-		(s.p ? ` nodes: <strong>${s.p.pdbs.length} + ${s.p.pprog.length}</strong>` : '');
+	const status = s.status_toString();
+	$('status_bar').innerHTML = `status: <span class="status ${status}">${status}${msg!==null ? ' '+msg : ''}</span>` +
+		` step: <strong>${s.sc}</strong>` +
+		(s.p ? ` DB nodes: <strong>${s.p.pdbs.length}</strong> PROG nodes: <strong>${s.p.pprog.length}</strong>` : '');
 }
 function output_result(result) {
 	// sort output if sort-result checked
@@ -150,9 +156,9 @@ function update_dark_mode() {
 
 module.exports = {
 	inject_state,
-	tabs, link, clear_steps_tab, debounce_live_coding, on_program_change,
+	tabs, link, clear_steps_tab, on_program_change,
 	activate_tab, toggle_step_details, update_input_tab,
 	get_editor_text, update_editor_text, update_output_text,
-	update_status_bar, output_result, add_step_output, raw_toString,
+	update_status, output_result, add_step_output, raw_toString,
 	update_dark_mode
 }

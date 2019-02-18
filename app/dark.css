@@ -1,7 +1,6 @@
-body, textarea {
-	background-color: #000000;
-	color: #999999;
-}
+body, textarea { background-color: #000000; }
+textarea { color: #ACE; }
+body { color: #999999; }
 a { color: #CCCCCC; }
 
 .hilight_punctuation { color: #a53872; }

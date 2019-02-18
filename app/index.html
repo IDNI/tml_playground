@@ -37,6 +37,8 @@
 				<div id="tool_bar" class="row">
 					<div id="link_button" title="get link to this program" onclick="link()"
 						class="button">&#128279;</div>
+					<div id="load_button" title="load input" onclick="load()"
+						class="button">&#8681;</div>
 					<div id="run_button"  title="run program"  onclick="run()"
 						class="button">&#9654;</div>
 					<div id="step_button" title="do a step" onclick="step()"
@@ -45,11 +47,15 @@
 						class="button disabled-button" >&#9724;</div>
 					<div id="options_bar">
 						<span>
-							<input id="live_coding" type="checkbox" checked="true" onchange="on_program_change()" />&nbsp;
-							<label for="live_coding" class="xx-small">live</label>
+							<input id="autoload" type="checkbox" checked="true" onchange="on_options_change()" />
+							<label for="autoload" class="xx-small">autoload</label>
 						</span>
 						<span>
-							<input id="sort_result" type="checkbox" checked="true" onchange="on_program_change()" />
+							<input id="autorun" type="checkbox" checked="true" onchange="on_options_change()" />
+							<label for="autorun" class="xx-small">autorun</label>
+						</span>
+						<span>
+							<input id="sort_result" type="checkbox" checked="true" onchange="on_options_change()" />
 							<label for="sort_result" class="xx-small">sort</label>
 						</span>
 						<span>
@@ -115,19 +121,20 @@
 		<script src="tml.js/tml.min.js"></script>
 		<script src="js/tml_playground.min.js"></script>
 		<script>
-			console.log('starting');
 			const { lp } = require('tml');
 			const { ui, state } = require('tml_playground');
 			const s = state.create(lp);
 			function init() {};
+			function load() { s.load_input(); }
 			function load_intro(n) { s.load_intro(n); }
 			function run()  { s.run(); }
 			function step() { s.step(); }
 			function stop() { s.stop(); }
 			function link() { ui.link() };
-			function on_program_change(e) { ui.on_program_change(e); }
-			function activate_tab(tab) { ui.activate_tab(tab); }
-			function update_dark_mode() { ui.update_dark_mode(); }
+			function on_program_change(e) { s.changed = true; ui.on_program_change(e); }
+			function on_options_change(e) { ui.on_program_change(e); }
+			function activate_tab(tab)    { ui.activate_tab(tab); }
+			function update_dark_mode()   { ui.update_dark_mode(); }
 		</script>
 	</body>
 </html>
