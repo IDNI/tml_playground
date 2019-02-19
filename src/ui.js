@@ -7,19 +7,16 @@ let s = {}; // state
 const tabs = Object.freeze([ 'output', 'input', 'steps' ]);
 
 function clear_steps_tab() { $('steps').innerText = ''; }
-function rerun()  { console.log('rerun'); s.rerun(); }
-function reload() { console.log('reload'); s.reload(); }
-function debounce_autorun () { return debounce(rerun, 200); }
-function debounce_autoload() { return debounce(reload, 200); }
-function on_program_change() {
-	console.log(`on_program_change`);
+
+function debounce_on_program_change() {
+	console.log(`debounce_on_program_change()`);
 	if (checked('autorun')) {
-		console.log('debounce_autorun');
-		debounce_autorun();
+		console.log('autorun');
+		s.rerun();
 	} else {
 		if (checked('autoload')) {
-			console.log('debounce_autoload');
-			debounce_autoload();
+			console.log('autoload');
+			s.reload();
 		}
 	}
 	// update location url
@@ -32,6 +29,10 @@ function on_program_change() {
 		: `intro=${intro_id}`;
 	update_location_url(get_title(), get_link_with_updated_search(search));
 	return true;
+}
+function on_program_change() {
+	console.log(`on_program_change()`);
+	return debounce(debounce_on_program_change)();
 }
 function activate_tab(tab) {
 	// hide all tabs but the 'tab'
