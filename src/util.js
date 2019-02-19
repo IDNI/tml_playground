@@ -31,7 +31,7 @@ function get_param(p) {
 // N milliseconds. If `immediate` is passed, trigger the function on the
 // leading edge, instead of the trailing.
 // https://davidwalsh.name/javascript-debounce-function
-function debounce(fn, wait, immediate) {
+function debounce(fn, wait = 200, immediate = false) {
 	let t;
 	return () => {
 		const a = arguments;
