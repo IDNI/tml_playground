@@ -4,3 +4,6 @@ app/js
 *.wmap.js
 *.js.map.js
 app/tml.js/tml.debug*
+.nyc_output
+coverage
+

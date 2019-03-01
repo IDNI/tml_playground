@@ -69,7 +69,7 @@ function update_status(msg = null) {
 	const status = s.status_toString();
 	$('status_bar').innerHTML = `status: <span class="status ${status}">${status}${msg!==null ? ' '+msg : ''}</span>` +
 		` step: <strong>${s.sc}</strong>` +
-		(s.p ? ` DB nodes: <strong>${s.p.pdbs.length}</strong> PROG nodes: <strong>${s.p.pprog.length}</strong>` : '');
+		(s.p ? ` DB nodes: <strong>${s.p.dbs.length}</strong> PROG nodes: <strong>${s.p.prog.length}</strong>` : '');
 }
 function output_result(result) {
 	// sort output if sort-result checked
@@ -91,7 +91,7 @@ function add_step_output(result) {
 	s_div.innerHTML =
 		`	<div id="step_${s.sc}_activator" class="step-activator step-active" onclick="ui.toggle_step_details(${s.sc})">` +
 		`STEP ${s.sc} <span class="collapser">&#9654;</span>` +
-		(s.p ? ` nodes: ${s.p.pdbs.length} + ${s.p.pprog.length}` : '') +
+		(s.p ? ` nodes: ${s.p.dbs.length} + ${s.p.prog.length}` : '') +
 		`</div>\n` +
 		`	<div id="step_${s.sc}_details" class="step-details">\n` + raw_toString(facts) + `\n</div>`
 	$('steps').insertAdjacentElement("beforeend", s_div);

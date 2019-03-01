@@ -126,7 +126,7 @@ class state {
 	// TODO: move this to tml.js?
 	get_raw_db(sort = false) {
 		const p = this.p;
-		let t = p.pdbs.from_bits(p.db, p.bits, p.ar, 1).map(t => [t]);
+		let t = p.dbs.from_bits(p.db, p.bits, p.ar, 1).map(t => [t]);
 		if (sort) {
 			const cmp = (a, b) => {
 				const l = a.length < b.length ? a.length : b.length;
