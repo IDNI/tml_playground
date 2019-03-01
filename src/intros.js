@@ -298,7 +298,7 @@ tc ?x ?y :- tc ?x ?z, e ?z ?y.
 # TML infers all the possible paths in the
 # 'e' graph into 'tc' graph.`,
 // NEGATION
-`# Negation (does not work properly yet!)
+`# Negation
 #
 # For negation is used a '~' character.
 # You can read it as 'not'.
