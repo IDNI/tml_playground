@@ -116,14 +116,14 @@ function raw_toString(raw, negs = false) {
 				.join(' ');
 	}
 	const rule_toString = r => {
-		const body_len = r.length-1;
-		const is_rule = body_len > 0;
+		const body_len = r.length;
+		const is_rule = body_len > 1;
 		// head or fact
-		let res = term_toString(r[r.length-1], is_rule ? 'head' : 'fact');
+		let res = term_toString(r[0], is_rule ? 'head' : 'fact');
 		// and rule body terms if any
 		if (is_rule) {
 			res += ' <span class="hilight_punctuation">:-</span> ';
-			for (let i = 0; i < body_len; i++) {
+			for (let i = 1; i < body_len; i++) {
 				res += term_toString(r[i], 'body') + (i+1 < body_len ? '<span class="hilight_punctuation">,</span> ' : '');
 			}
 		}
