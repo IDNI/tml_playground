@@ -9,13 +9,10 @@ const tabs = Object.freeze([ 'output', 'input', 'steps' ]);
 function clear_steps_tab() { $('steps').innerText = ''; }
 
 function debounce_on_program_change() {
-	console.log(`debounce_on_program_change()`);
 	if (checked('autorun')) {
-		console.log('autorun');
 		s.rerun();
 	} else {
 		if (checked('autoload')) {
-			console.log('autoload');
 			s.reload();
 		}
 	}
@@ -31,7 +28,6 @@ function debounce_on_program_change() {
 	return true;
 }
 function on_program_change() {
-	console.log(`on_program_change()`);
 	return debounce(debounce_on_program_change)();
 }
 function activate_tab(tab) {
