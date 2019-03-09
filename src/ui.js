@@ -52,8 +52,8 @@ function update_input_tab(raw) {
 		return res + `<br/>\n`;
 	}
 	$('input_program').innerHTML = raw_toString(raw, true);
-	$('dict_vars').innerHTML = dict_out(s.p.d.vars, true);
-	$('dict_syms').innerHTML = dict_out(s.p.d.syms);
+	$('dict_vars').innerHTML = dict_out(s.driver.d.vars, true);
+	$('dict_syms').innerHTML = dict_out(s.driver.d.syms);
 }
 function get_editor_text() { return $('editor_textarea').value; }
 function update_editor_text(text) { $('editor_textarea').value = text; }
@@ -65,7 +65,7 @@ function update_status(msg = null) {
 	const status = s.status_toString();
 	$('status_bar').innerHTML = `status: <span class="status ${status}">${status}${msg!==null ? ' '+msg : ''}</span>` +
 		` step: <strong>${s.sc}</strong>` +
-		(s.p ? ` DB nodes: <strong>${s.p.dbs.length}</strong> PROG nodes: <strong>${s.p.prog.length}</strong>` : '');
+		(s.driver.p ? ` nodes: <strong>${s.driver.p.bdds.V.length}</strong>` : '');
 }
 function output_result(result) {
 	// sort output if sort-result checked
@@ -87,7 +87,7 @@ function add_step_output(result) {
 	s_div.innerHTML =
 		`	<div id="step_${s.sc}_activator" class="step-activator step-active" onclick="ui.toggle_step_details(${s.sc})">` +
 		`STEP ${s.sc} <span class="collapser">&#9654;</span>` +
-		(s.p ? ` nodes: ${s.p.dbs.length} + ${s.p.prog.length}` : '') +
+		(s.driver.p ? ` nodes: ${s.driver.p.bdds.V.length}` : '') +
 		`</div>\n` +
 		`	<div id="step_${s.sc}_details" class="step-details">\n` + raw_toString(facts) + `\n</div>`
 	$('steps').insertAdjacentElement("beforeend", s_div);
@@ -98,7 +98,7 @@ function add_step_output(result) {
 function raw_toString(raw, negs = false) {
 	const arg_toString = (a, hilight = 'body') => {
 		if (a == 0) { return false; }
-		const str = s.p.d.get(a);
+		const str = s.driver.d.get(a);
 		return `<span title="${str}"><sub class="dictid">${a}</sub><span class="hilight_${hilight}${a<0?' hilight_variable':''}">${str}</span></span>`;
 	}
 	const term_toString = (t, hilight = 'body') => {

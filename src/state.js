@@ -5,13 +5,12 @@ const { $, checked, get_param, update_location_url, get_title,
 const status = Object.freeze({ error: 0, loaded: 1, running: 2, stopped: 3, finished: 4, unsat: 5 });
 
 class state {
-	constructor(lp_class, is) {
+	constructor(tml, is) {
 		this.sc = 0;
 		this.d = 0;
 		this.s = [];
-		this.p = null;
 		this.intros = is;
-		this.lp_class = lp_class;
+		this.driver = new tml.driver();
 		this.st = status.init;
 		this.changed = false;
 	}
@@ -37,14 +36,13 @@ class state {
 		this.sc = 0; // step counter
 		this.d = 0;  // current db root
 		this.s = []; // previous steps' db roots
-		this.p = new this.lp_class();
 		try {
 			let source = ui.get_editor_text();
-			source = lp.string_read_text(source);
-			const raw = this.p.prog_read(source);
+			source = tml.string_read_text(source);
+			const raw = this.driver.prog_read(source);
 			ui.update_input_tab(raw);
 			ui.add_step_output();
-			ui.output_result(this.p.toString());
+			ui.output_result(this.driver.toString());
 			this.st = status.loaded;
 			this.changed = false;
 			ui.update_status();
@@ -69,11 +67,11 @@ class state {
 		if (!this.is_running()) { this.sc = 0; }
 		this.st = status.running;
 		for (let i = 0; n === 0 || i < n; i++) {
-			this.d = this.p.db;  // get current db root
+			this.d = this.driver.p.db;  // get current db root
 			this.s.push(this.d); // store current db root into previous steps
 			++this.sc;
 			try {
-				this.p.step(); // do pfp step
+				this.driver.p.step(); // do pfp step
 			} catch (err) {
 				console.log('error', err);
 				this.st = status.error;
@@ -82,17 +80,17 @@ class state {
 				return false;
 			}
 			// FP if db root resulted already from a previous step
-			if (this.s.includes(this.p.db)) {
-				if (this.d === this.p.db) { // sat
+			if (this.s.includes(this.driver.p.db)) {
+				if (this.d === this.driver.p.db) { // sat
 					this.st = status.finished;
 				} else {
 					this.st = status.unsat;
-					ui.output_result(this.p.toString());
+					ui.output_result(this.driver.toString());
 				}
 				break;
 			}
 			ui.add_step_output();
-			ui.output_result(this.p.toString());
+			ui.output_result(this.driver.toString());
 		}
 		ui.update_status();
 	}
@@ -125,8 +123,8 @@ class state {
 	// gets raw facts from the db (sorts if sort_result checked).
 	// TODO: move this to tml.js?
 	get_raw_db(sort = false) {
-		const p = this.p;
-		let t = p.dbs.from_bits(p.db, p.bits, p.ar, 1).map(t => [t]);
+		const p = this.driver.p;
+		let t = p.from_bits(p.db, p.bits, p.ar, 1).map(t => [t]);
 		if (sort) {
 			const cmp = (a, b) => {
 				const l = a.length < b.length ? a.length : b.length;
@@ -144,8 +142,8 @@ class state {
 }
 
 // create new state
-state.create = function (lp) {
-	const s = new state(lp, intros);
+state.create = function (tml) {
+	const s = new state(tml, intros);
 	const prog = get_param('prog'); // get prog from url
 	ui.inject_state(s);
 	if (prog && prog.length > 0)  {

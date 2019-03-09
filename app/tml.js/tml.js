@@ -17,13 +17,14 @@ require=(function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c=
 
 // DEFAULT OPTIONS
 const options = {
-	memoization: true,
-	recursive: false
+	memoization: false
 }
-let bdds = null; // bdds class (to be loaded when required)
+
 // debug functions
-// internal counters for every bdd and apply call
-const _counters = { bdds: 0, apply: 0 };
+
+// internal counters for apply calls
+const _counters = { apply: 0, or: 0, ex: 0, and: 0, deltail: 0,
+	and_deltail: 0, and_ex: 0, and_not: 0, and_not_ex: 0, permute: 0 };
 
 // node in a bdd tree
 class node {
@@ -40,60 +41,19 @@ class node {
 }
 
 // bdds base class
-class bdds_base {
+class bdds {
 	// F=0 and T=1 consants
 	static get F() { return 0; }
 	static get T() { return 1; }
 	// initialize bdds
-	constructor(nvars) {
+	constructor() {
 		this._id = ++_counters.bdds;
 		this.V = [];          // all nodes
 		this.M = {};          // node to its index
-		this.nvars = nvars;   // number of vars
-		this.offset = 0;
-		// used for implicit power
-		this.pdim = 1;
-		this.ndim = 0;
-		this.root = 0;        // root of bdd
-		this.maxbdd = 0;
 		// initialize bdd with 0 and 1 terminals
 		this.add_nocheck(new node(0, 0, 0));
 		this.add_nocheck(new node(0, 1, 1));
-	}
-	static flip(n) {
-		if (bdds_base.leaf(n)) return bdds_base.trueleaf(n) ? new node(0,0,0) : new node (0,1,1);
-		const nn = n.clone();
-		if (bdds_base.leaf(nn.hi)) nn.hi = bdds_base.trueleaf(nn.hi) ? bdds_base.F : bdds_base.T;
-		if (bdds_base.leaf(nn.lo)) nn.lo = bdds_base.trueleaf(nn.lo) ? bdds_base.F : bdds_base.T;
-		return nn;
-	}
-	// checks if node is terminal (leaf)
-	static leaf(n) {
-		const res = n instanceof node
-			? n.v === 0
-			: n === bdds_base.T || n === bdds_base.F;
-		return res;
-	}
-	// checks if node is terminal and is T
-	static trueleaf(n) {
-		const res = n instanceof node
-			? bdds_base.leaf(n) && (n.hi > 0)
-			: n === bdds_base.T;
-		return res;
-	}
-	shift(n) {
-		const nn = n.clone();
-		if (!bdds_base.leaf(nn)) { nn.v += this.offset; }
-		return nn;
-	}
-	// set virtual power
-	setpow(root, p, n, maxw, offset) {
-		this.root = root;
-		this.pdim = p;
-		this.ndim = n;
-		this.offset = offset;
-		this.maxbdd = 1<<(Math.floor(32/maxw));
-		return this.root;
+		this.memos_clear();
 	}
 	// add node directly without checking
 	add_nocheck(n) {
@@ -102,75 +62,45 @@ class bdds_base {
 		this.V.push(n);
 		return r;
 	}
+	// returns node by its index
+	getnode(nid) { return this.V[nid]; }
+	// checks if node is terminal (leaf)
+	static leaf(n) {
+		const res = n instanceof node
+			? n.v === 0
+			: n === bdds.T || n === bdds.F;
+		return res;
+	}
+	// checks if node is terminal and is T
+	static trueleaf(n) {
+		const res = n instanceof node
+			? bdds.leaf(n) && (n.hi > 0)
+			: n === bdds.T;
+		return res;
+	}
+
+	from_bit(x, v) {
+		const n = v === true || v > 0
+			? new node(x + 1, bdds.T, bdds.F)
+			: new node(x + 1, bdds.F, bdds.T);
+		const res = this.add(n);
+		return res;
+	}
 	// adds new node
 	add(n) {
 		let r = null;
 		let _dbg = '';
 		do {
-			if (n.v > this.nvars) {
-				throw Error('Node id too big.');
-			}
-			if (n.hi === n.lo) {
-				r = n.hi;
-				break;
-			}
-			if (this.M.hasOwnProperty(n.key)) {
-				r = this.M[n.key];
-				break;
-			}
+			if (n.hi === n.lo) { r = n.hi; break; }
+			if (this.M.hasOwnProperty(n.key)) { r = this.M[n.key]; break; }
 			r = this.add_nocheck(n);
-			_dbg = ' nocheck'
+			_dbg = ' nocheck';
 		} while (0);
 		return r;
 	}
-	// returns node by its index
-	getnode(nid) {
-		if (this.pdim === 1 && this.ndim === 0) {
-			const r = this.shift(this.V[nid])
-			return r;
-		}
-		if (this.pdim === 0 && this.ndim === 1) {
-			const r = this.shift(bdds_base.leaf(nid) ? this.V[nid] : bdds_base.flip(this.V[nid]));
-			return r;
-		}
-		const m = nid % this.maxbdd;
-		const d = Math.floor(nid / this.maxbdd);
-		const n = d < this.pdim ? this.V[m].clone() : (bdds_base.leaf(m) ? this.V[m].clone() : bdds_base.flip(this.V[m]));
-		if (n.v > 0) n.v += this.nvars * d;
-		if (bdds_base.trueleaf(n.hi)) {
-			if (d < this.pdim+this.ndim-1) {
-				n.hi = this.root + this.maxbdd * (d + 1);
-			}
-		} else {
-			if (!bdds_base.leaf(n.hi)) {
-				n.hi = n.hi + this.maxbdd * d;
-			}
-		}
-		if (bdds_base.trueleaf(n.lo)) {
-			if (d < this.pdim+this.ndim-1) {
-				n.lo = this.root + this.maxbdd * (d + 1);
-			}
-		} else {
-			if (!bdds_base.leaf(n.lo)) {
-				n.lo = n.lo + this.maxbdd * d;
-			}
-		}
-		// _dbg_apply(`        ` + `this.maxbdd:${this.maxbdd} this.nvars:`, this.nvars);
-		return this.shift(n);
-	}
-	// returns bdd's length = number of nodes
-	get length() { return this.V.length; }
-}
 
-// bdds class with recursive algos
-class bdds_rec extends bdds_base {
-	constructor(nvars) {
-		super(nvars);
-		if (options.memoization) this.memos_clear();
-	}
 	sat(v, nvars, n, p, r) {
 		if (bdds.leaf(n) && !bdds.trueleaf(n)) return;
-		if (v > nvars+1) throw new Error(`(v = ${v}) > (nvars+1 = ${nvars+1})`);
 		if (v < n.v) {
 			p[v-1] = true;
 			this.sat(v+1, nvars, n, p, r);
@@ -187,82 +117,33 @@ class bdds_rec extends bdds_base {
 			}
 		}
 	}
+
 	allsat(x, nvars) {
 		const p = Array(nvars).fill(false); const r = [];
 		this.sat(1, nvars, this.getnode(x), p, r)
 		return r;
 	}
-	from_bit(x, v) {
-		const n = v === true || v > 0
-			? new node(x + 1, bdds_base.T, bdds_base.F)
-			: new node(x + 1, bdds_base.F, bdds_base.T);
-		const res = this.add(n);
-		return res;
-	}
-	// if-then-else operator
-	ite(v, t, e) {
-		const x = this.getnode(t);
-		const y = this.getnode(e);
-		if ((bdds.leaf(x) || v < x.v)
-		&&  (bdds.leaf(y) || v < y.v)) {
-			return this.add(new node(v + 1, t, e));
-		}
-		const hi = this.bdd_and(this.from_bit(v, true), t);
-		const lo = this.bdd_and(this.from_bit(v, false), e);
-		return this.bdd_or(hi, lo);
-	}
-	copy(b, x) {
-		if (bdds.leaf(x)) return x;
-		let t;
-		if (options.memoization) {
-			t = b._id+'.'+x;
-			if (this.memo_copy.hasOwnProperty(t)) {
-				return this.memo_copy[t];
-			}
-		}
-		const n = b.getnode(x);
-		const hi = this.copy(b, n.hi);
-		const lo = this.copy(b, n.lo);
-		const res = this.add(new node(n.v, hi, lo));
-		if (options.memoization) this.memo_copy[t] = res;
-		return res;
-	}
-	delhead(x, h) {
-		if (bdds.leaf(x)) {
-			return x;
-		}
-		const n = this.getnode(x).clone();
-		if (n.v > h) {
-			return x;
-		}
-		const hi = this.delhead(n.hi, h);
-		const lo = this.delhead(n.lo, h);
-		const r = this.bdd_or(hi, lo);
-		return r;
-	}
 
-	static apply_and(src, x, dst, y) {
-		const apply_id = ++_counters.apply;
+	or(x, y) {
+		const or_id = ++_counters.or;
 		let t;
 		let apply_ret = r => r;
 		if (options.memoization) {
-			t = `${dst._id}.${x}.${y}`;
+			t = x+'.'+y;
 			apply_ret = (r, m) => { m[t] = r; return r; }
-			if (src.memo_and.hasOwnProperty(t)) {
-				return src.memo_and[t];
+			if (this.memo_or.hasOwnProperty(t)) {
+				return this.memo_or[t];
 			}
 		}
-		const xn = src.getnode(x).clone();
+		const xn = this.getnode(x).clone();
 		if (bdds.leaf(xn)) {
-			const r = bdds.trueleaf(xn) ? y : bdds.F;
-			return apply_ret(r, src.memo_and);
+			const r = bdds.trueleaf(xn) ? bdds.T : y;
+			return apply_ret(r, this.memo_or);
 		}
-		const yn = dst.getnode(y).clone();
+		const yn = this.getnode(y).clone();
 		if (bdds.leaf(yn)) {
-			const r = !bdds.trueleaf(yn)
-				? bdds.F
-				: (src === dst ? x : dst.copy(src, x));
-			return apply_ret(r, src.memo_and);
+			const r = bdds.trueleaf(yn) ? bdds.T : x;
+			return apply_ret(r, this.memo_or);
 		}
 		let v;
 		if (((xn.v === 0) && (yn.v > 0))
@@ -273,7 +154,7 @@ class bdds_rec extends bdds_base {
 		} else {
 			if (xn.v === 0) {
 				const r = (a && b) ? bdds.T : bdds.F;
-				return apply_ret(r, src.memo_and);
+				return apply_ret(r, this.memo_or);
 			} else {
 				v = xn.v;
 				if ((v < yn.v) || yn.v === 0) {
@@ -282,33 +163,222 @@ class bdds_rec extends bdds_base {
 				}
 			}
 		}
-		const hi  = bdds.apply_and(src, xn.hi, dst, yn.hi);
-		const lo = bdds.apply_and(src, xn.lo, dst, yn.lo);
-		const r = dst.add(new node(v, hi, lo));
-		return apply_ret(r, src.memo_and);
+		const hi  = this.or(xn.hi, yn.hi);
+		const lo = this.or(xn.lo, yn.lo);
+		const r = this.add(new node(v, hi, lo));
+		return apply_ret(r, this.memo_or);
 	}
 
-	static apply_and_not(src, x, dst, y) {
-		const apply_id = ++_counters.apply;
+	ex(x, b) {
+		const ex_id = ++_counters.ex;
 		let t;
 		let apply_ret = r => r;
 		if (options.memoization) {
-			t = `${dst._id}.${x}.${y}`;
+			t = x+'.'+b.join(',');
 			apply_ret = (r, m) => { m[t] = r; return r; }
-			if (src.memo_and.hasOwnProperty(t)) {
-				return src.memo_and[t];
+			if (this.memo_ex.hasOwnProperty(t)) {
+				return this.memo_ex[t];
 			}
 		}
-		const xn = src.getnode(x).clone();
-		if (bdds.leaf(xn) && !bdds.trueleaf(xn)) {
-			return apply_ret(bdds.F, src.memo_and_not);
+		let n = this.getnode(x);
+		if (bdds.leaf(n)) return x;
+		if (b[n.v-1] === true || b[n.v-1] > 0) {
+			x = this.or(n.hi, n.lo);
+			if (bdds.leaf(x)) { return apply_ret(x, this.memo_ex); }
+			n = this.getnode(x);
 		}
-		const yn = dst.getnode(y).clone(); // copy from src?
+		const hi = this.ex(n.hi, b);
+		const lo = this.ex(n.lo, b);
+		const r = this.add(new node(n.v, hi, lo));
+		return apply_ret(r, this.memo_ex);
+	}
+
+	and(x, y) {
+		const and_id = ++_counters.and;
+		let t;
+		let apply_ret = r => r;
+		if (options.memoization) {
+			t = `${x}.${y}`;
+			apply_ret = (r, m) => { m[t] = r; return r; }
+			if (this.memo_and.hasOwnProperty(t)) {
+				return this.memo_and[t];
+			}
+		}
+		const xn = this.getnode(x).clone();
+		if (bdds.leaf(xn)) {
+			const r = bdds.trueleaf(xn) ? y : bdds.F;
+			return apply_ret(r, this.memo_and);
+		}
+		const yn = this.getnode(y).clone();
 		if (bdds.leaf(yn)) {
-			const r = bdds.trueleaf(yn)
-				? bdds.F
-				: (src === dst ? x : dst.copy(src, x));
-			return apply_ret(r, src.memo_and_not);
+			const r = !bdds.trueleaf(yn) ? bdds.F : x;
+			return apply_ret(r, this.memo_and);
+		}
+		let v;
+		if (((xn.v === 0) && (yn.v > 0))
+		|| ((yn.v > 0) && (xn.v > yn.v))) {
+			v = yn.v;
+			xn.hi = x;
+			xn.lo = x;
+		} else {
+			if (xn.v === 0) {
+				const r = (a && b) ? bdds.T : bdds.F;
+				return apply_ret(r, this.memo_and);
+			} else {
+				v = xn.v;
+				if ((v < yn.v) || yn.v === 0) {
+					yn.hi = y;
+					yn.lo = y;
+				}
+			}
+		}
+		const hi  = this.and(xn.hi, yn.hi);
+		const lo = this.and(xn.lo, yn.lo);
+		const r = this.add(new node(v, hi, lo));
+		return apply_ret(r, this.memo_and);
+	}
+
+	deltail(x, h) {
+		const deltail_id = ++_counters.deltail;
+		let t;
+		let apply_ret = r => r;
+		if (options.memoization) {
+			t = `${x}.${h}`;
+			apply_ret = (r, m) => { m[t] = r; return r; }
+			if (this.memo_deltail.hasOwnProperty(t)) {
+				return this.memo_deltail[t];
+			}
+		}
+		if (bdds.leaf(x)) {
+			return x;
+		}
+		const n = this.getnode(x).clone();
+		if (n.v > h) {
+			const r = n.hi === bdds.F && n.lo === bdds.F ? bdds.F : bdds.T;
+			return apply_ret(r, this.memo_deltail);
+		}
+		const hi = this.deltail(n.hi, h);
+		const lo = this.deltail(n.lo, h);
+		const r = this.add(new node(n.v, hi, lo));
+		return apply_ret(r, this.memo_deltail);
+	}
+
+	and_deltail(x, y, h) {
+		const and_deltail_id = ++_counters.and_deltail;
+		let t;
+		let apply_ret = r => r;
+		if (options.memoization) {
+			t = `${x}.${y}.${h}`;
+			apply_ret = (r, m) => { m[t] = r; return r; }
+			if (this.memo_and_deltail.hasOwnProperty(t)) {
+				return this.memo_and_deltail[t];
+			}
+		}
+		const xn = this.getnode(x).clone();
+		if (bdds.leaf(xn)) {
+			const r = bdds.trueleaf(xn) ? this.deltail(y, h) : bdds.F;
+			return apply_ret(r, this.memo_and_deltail);
+		}
+		const yn = this.getnode(y).clone();
+		if (bdds.leaf(yn)) {
+			const r = !bdds.trueleaf(yn) ? bdds.F : this.deltail(x, h);
+			return apply_ret(r, this.memo_and_deltail);
+		}
+		let v;
+		if (((xn.v === 0) && (yn.v > 0))
+		|| ((yn.v > 0) && (xn.v > yn.v))) {
+			v = yn.v;
+			xn.hi = x;
+			xn.lo = x;
+		} else {
+			if (xn.v === 0) {
+				const r = (a && b) ? bdds.T : bdds.F;
+				return apply_ret(r, this.memo_and_deltail);
+			} else {
+				v = xn.v;
+				if ((v < yn.v) || yn.v === 0) {
+					yn.hi = y;
+					yn.lo = y;
+				}
+			}
+		}
+		const hi  = this.and_deltail(xn.hi, yn.hi, h);
+		const lo = this.and_deltail(xn.lo, yn.lo, h);
+		const r = this.deltail(this.add(new node(v, hi, lo)), h);
+		return apply_ret(r, this.memo_and_deltail);
+	}
+
+	and_ex(x, y, s) {
+		const and_ex_id = ++_counters.and_ex;
+		let t;
+		let apply_ret = r => r;
+		if (options.memoization) {
+			t = `${x}.${y}.${s.join(',')}`;
+			apply_ret = (r, m) => { m[t] = r; return r; }
+			if (this.memo_and_ex.hasOwnProperty(t)) {
+				return this.memo_and_ex[t];
+			}
+		}
+		const xn = this.getnode(x).clone();
+		if (bdds.leaf(xn)) {
+			const r = bdds.trueleaf(xn) ? this.ex(y, s) : bdds.F;
+			return apply_ret(r, this.memo_and_ex);
+		}
+		const yn = this.getnode(y).clone();
+		if (bdds.leaf(yn)) {
+			const r = !bdds.trueleaf(yn) ? bdds.F : this.ex(x, s);
+			return apply_ret(r, this.memo_and_ex);
+		}
+		let v;
+		if (((xn.v === 0) && (yn.v > 0))
+		|| ((yn.v > 0) && (xn.v > yn.v))) {
+			v = yn.v;
+			xn.hi = x;
+			xn.lo = x;
+		} else {
+			if (xn.v === 0) {
+				const r = (a && b) ? bdds.T : bdds.F;
+				return apply_ret(r, this.memo_and_ex);
+			} else {
+				v = xn.v;
+				if ((v < yn.v) || yn.v === 0) {
+					yn.hi = y;
+					yn.lo = y;
+				}
+			}
+		}
+		let r;
+		if (s[v-1] === true || s[v-1] > 0) {
+			const lo = this.and_ex(xn.lo, yn.lo, s);
+			const hi  = this.and_ex(xn.hi, yn.hi, s);
+			r = this.or(hi, lo);
+		} else {
+			const hi  = this.and_ex(xn.hi, yn.hi, s);
+			const lo = this.and_ex(xn.lo, yn.lo, s);
+			r = this.add(new node(v, hi, lo));
+		}
+		return apply_ret(r, this.memo_and_ex);
+	}
+
+	and_not(x, y) {
+		const and_not_id = ++_counters.and_not;
+		let t;
+		let apply_ret = r => r;
+		if (options.memoization) {
+			t = x+'.'+y;
+			apply_ret = (r, m) => { m[t] = r; return r; }
+			if (this.memo_and_not.hasOwnProperty(t)) {
+				return this.memo_and_not[t];
+			}
+		}
+		const xn = this.getnode(x).clone();
+		if (bdds.leaf(xn) && !bdds.trueleaf(xn)) {
+			return apply_ret(bdds.F, this.memo_and_not);
+		}
+		const yn = this.getnode(y).clone();
+		if (bdds.leaf(yn)) {
+			const r = bdds.trueleaf(yn) ? bdds.F : x;
+			return apply_ret(r, this.memo_and_not);
 		}
 		let v;
 		if (((xn.v === 0) && (yn.v > 0))
@@ -319,7 +389,7 @@ class bdds_rec extends bdds_base {
 		} else {
 			if (xn.v === 0) {
 				const r = (a && !b) ? bdds.T : bdds.F;
-				return apply_ret(r, src.memo_and_not);
+				return apply_ret(r, this.memo_and_not);
 			} else {
 				v = xn.v;
 				if ((v < yn.v) || yn.v === 0) {
@@ -328,34 +398,32 @@ class bdds_rec extends bdds_base {
 				}
 			}
 		}
-		const hi  = bdds.apply_and_not(src, xn.hi, dst, yn.hi);
-		const lo = bdds.apply_and_not(src, xn.lo, dst, yn.lo);
-		const r = dst.add(new node(v, hi, lo));
-		return apply_ret(r, src.memo_and_not);
+		const hi = this.and_not(xn.hi, yn.hi);
+		const lo = this.and_not(xn.lo, yn.lo);
+		const r = this.add(new node(v, hi, lo));
+		return apply_ret(r, this.memo_and_not);
 	}
 
-	static apply_or(src, x, dst, y) {
-		const apply_id = ++_counters.apply;
+	and_not_ex(x, y, s) {
+		const and_not_ex_id = ++_counters.and_not_ex;
 		let t;
 		let apply_ret = r => r;
 		if (options.memoization) {
-			t = `${dst._id}.${x}.${y}`;
+			t = `${x}.${y}.${s.join(',')}`;
 			apply_ret = (r, m) => { m[t] = r; return r; }
-			if (src.memo_or.hasOwnProperty(t)) {
-				return src.memo_or[t];
+			if (this.memo_and_not_ex.hasOwnProperty(t)) {
+				return this.memo_and_not_ex[t];
 			}
 		}
-		const xn = src.getnode(x).clone();
+		const xn = this.getnode(x).clone();
 		if (bdds.leaf(xn)) {
-			const r = bdds.trueleaf(xn) ? bdds.T : y;
-			return apply_ret(r, src.memo_or);
+			const r = bdds.trueleaf(xn) ? this.ex(y, s) : bdds.F;
+			return apply_ret(r, this.memo_and_not_ex);
 		}
-		const yn = dst.getnode(y).clone();
+		const yn = this.getnode(y).clone();
 		if (bdds.leaf(yn)) {
-			const r = bdds.trueleaf(yn)
-				? bdds.T
-				: (src === dst ? x : dst.copy(src, x));
-			return apply_ret(r, src.memo_or);
+			const r = !bdds.trueleaf(yn) ? bdds.F : this.ex(x, s);
+			return apply_ret(r, this.memo_and_not_ex);
 		}
 		let v;
 		if (((xn.v === 0) && (yn.v > 0))
@@ -366,7 +434,7 @@ class bdds_rec extends bdds_base {
 		} else {
 			if (xn.v === 0) {
 				const r = (a && b) ? bdds.T : bdds.F;
-				return apply_ret(r, src.memo_or);
+				return apply_ret(r, this.memo_and_not_ex);
 			} else {
 				v = xn.v;
 				if ((v < yn.v) || yn.v === 0) {
@@ -375,49 +443,64 @@ class bdds_rec extends bdds_base {
 				}
 			}
 		}
-		const hi  = bdds.apply_or(src, xn.hi, dst, yn.hi);
-		const lo = bdds.apply_or(src, xn.lo, dst, yn.lo);
-		const r = dst.add(new node(v, hi, lo));
-		return apply_ret(r, src.memo_or);
+		const hi  = this.and_not_ex(xn.hi, yn.hi, s);
+		const lo = this.and_not_ex(xn.lo, yn.lo, s);
+		const r = s[v-1]
+			? this.or(hi, lo)
+			: this.add(new node(v, hi, lo));
+		return apply_ret(r, this.memo_and_not_ex);
 	}
-	// helper constructors
+
+	// if-then-else operator
+	ite(v, t, e) {
+		const x = this.getnode(t);
+		const y = this.getnode(e);
+		if ((bdds.leaf(x) || v < x.v)
+		&&  (bdds.leaf(y) || v < y.v)) {
+			return this.add(new node(v + 1, t, e));
+		}
+		const hi = this.and(this.from_bit(v, true), t);
+		const lo = this.and(this.from_bit(v, false), e);
+		return this.or(hi, lo);
+	}
+
+	permute(x, m) {
+		const permute_id = ++_counters.permute;
+		let t;
+		let apply_ret = r => r;
+		if (options.memoization) {
+			t = `${x}.${m.join(',')}`;
+			apply_ret = (r, m) => { m[t] = r; return r; }
+			if (this.memo_permute.hasOwnProperty(t)) {
+				return this.memo_permute[t];
+			}
+		}
+		if (bdds.leaf(x)) { return x; }
+		const n = this.getnode(x);
+		const hi = this.permute(n.hi, m);
+		const lo = this.permute(n.lo, m);
+		const r = this.ite(m[n.v-1], hi, lo);
+		return apply_ret(r, this.memo_permute);
+	}
+
 	from_eq(x, y) { // a bdd saying "x=y"
-		const res = this.bdd_or(
-			this.bdd_and(this.from_bit(y, false), this.from_bit(x, false)),
-			this.bdd_and(this.from_bit(y, true),  this.from_bit(x, true)));
+		const res = this.or(
+			this.and(this.from_bit(y, false), this.from_bit(x, false)),
+			this.and(this.from_bit(y, true),  this.from_bit(x, true)));
 		return res;
 	}
-	from_bits(x, bits, ar, w) {
-		const BIT = (term, arg, b) => (term*ar+arg)*bits+b;
-		const s = this.allsat(x, bits * ar * w);
-		const r = Array(s.length);
-		for (let k = 0; k < r.length; k++) {
-			r[k] = Array(w * ar).fill(0);
-		}
-		let n = 0;
-		for (let z = 0; z < s.length; z++) {
-			for (let j = 0; j != w; ++j) {
-				for (let i = 0; i != ar; ++i) {
-					for (let b = 0; b != bits; ++b) {
-						if (s[z][BIT(j, i, b)] > 0) {
-							r[n][j * ar + i] |= 1 << b;
-						}
-					}
-				}
-			}
-			++n;
-		}
-		return r;
-	}
-	bdd_or(x, y) { return bdds.apply_or(this, x, this, y); }
-	bdd_and(x, y) { return bdds.apply_and(this, x, this, y); }
-	bdd_and_not(x, y) { return bdds.apply_and_not(this, x, this, y); }
+
 	memos_clear() {
 		if (!options.memoization) return;
 		this.memo_and = {};
 		this.memo_and_not = {};
 		this.memo_or = {};
-		this.memo_copy = {};
+		this.memo_permute = {};
+		this.memo_and_ex = {};
+		this.memo_and_not_ex = {};
+		this.memo_deltail = {};
+		this.memo_and_deltail = {};
+		this.memo_ex = {};
 	}
 }
 
@@ -425,19 +508,11 @@ module.exports = (o = {}) => {
 	options.memoization = o.hasOwnProperty('memoization')
 		? o.memoization
 		: options.memoization;
-	options.recursive = o.hasOwnProperty('recursive')
-		? o.recursive
-		: options.recursive;
-	// load rec or non rec version of bdds class
-	bdds = options.recursive ? bdds_rec : require('./bdds_non_rec');
-	bdds.node = node;
-	bdds.bdds_rec = bdds_rec;
-	bdds.bdds_base = bdds_base;
-	bdds.options = options;
-	return bdds
+	return { node, bdds };
 }
 
-},{"./bdds_non_rec":2}],2:[function(require,module,exports){
+},{}],2:[function(require,module,exports){
+(function (process){
 // LICENSE
 // This software is free for use and redistribution while including this
 // license notice, unless:
@@ -454,91 +529,8 @@ module.exports = (o = {}) => {
 
 "use strict";
 
-const bdds = require('./bdds')({ recursive:false });
-const { bdds_rec, node } = bdds;
+const lp = require("./lp")();
 
-// debug functions
-// JS enum emulated by freezing the object
-const _enum = obj => Object.freeze(obj);
-
-// traversing states enum
-const s = _enum({ "LO": 1, "HI": 2, "OP": 3 });
-
-// extending bdds class for non recursive algos
-class bdds_non_rec extends bdds_rec {
-	// apply unary (ie. op_exists(existentials))
-	static apply_unary(b, x, r, op) {
-		const get = id => op.eval(b, id); // evaluates the operator
-		const parents = [];        // path from root to the current node
-		let ts = s.LO;                    // current traversing state
-		let n = get(x);                   // current node
-		let nn = bdds_non_rec.F;          // new node
-		let high = bdds_non_rec.F;        // last high leaf
-		let low = bdds_non_rec.F;         // last low leaf
-		do {                              // traversing the binary tree
-			if (ts === s.LO) {                  // search low
-				if(bdds_non_rec.leaf(n.lo)) {
-					low = n.lo;    // remember last low leaf
-					ts = s.HI;     // leaf, go search high
-				} else {               // not a leaf
-					parents.push(n); // store parent
-					n = get(n.lo); // go low (and search low)
-				}
-			} else if (ts === s.HI) {      // search high
-				if (bdds_non_rec.leaf(n.hi)) {
-					high = n.hi;   // remember last high leaf
-					ts = s.OP;     // leaf, do op
-				} else {               // not a leaf
-					parents.push(n); // store parent
-					n = get(n.hi); // go high
-					ts = s.LO;     // and search low
-				}
-			} else if (ts === s.OP) {     // do op and go UP
-				nn = r.add(new node(n.v, high, low));
-				if (parents.length === 0)
-					break; // we are back at the top -> break inf. loop
-				n = parents.pop(); // go up
-				if (nn === n.lo) { // if we operated on low
-					low = nn; ts = s.HI;  // set new low and go high
-				} else {           // else we operated on high already
-					high = nn; ts = s.OP; // set new high and go op
-				}
-			}
-		} while (true);
-		return nn; // return the last new node
-	}
-}
-
-module.exports = bdds_non_rec;
-
-},{"./bdds":1}],3:[function(require,module,exports){
-// LICENSE
-// This software is free for use and redistribution while including this
-// license notice, unless:
-// 1. is used for commercial or non-personal purposes, or
-// 2. used for a product which includes or associated with a blockchain or other
-// decentralized database technology, or
-// 3. used for a product which includes or associated with the issuance or use
-// of cryptographic or electronic currencies/coins/tokens.
-// On all of the mentioned cases, an explicit and written permission is required
-// from the Author (Ohad Asor).
-// Contact ohad@idni.org for requesting a permission. This license may be
-// modified over time by the Author.
-// Author of the Javascript rewrite: Tomáš Klapka <tomas@klapka.cz>
-
-"use strict";
-
-// DEFAULT OPTIONS
-const options = {
-	recursive: false, // use rec or non rec algos
-}
-let bdds = null; // bdds class (to be loaded when required)
-// load helper function for exporting bdds to dot, svg and/or png
-// const { bdd_out } = require('./util');
-
-// debug functions
-// internal counter for lps (lp._id)
-const _counters = { lp: 0 };
 
 // messages
 const identifier_expected     = `Identifier expected`;
@@ -588,90 +580,35 @@ class dict {
 	}
 }
 
-function get_range(bdd, i, j, s, bits, ar) {
-	const BIT = (term, arg, b) => (term*ar+arg)*bits+b;
-	let rng = bdds.F;
-	for (let k = 1; k != s; ++k) {
-		let elem = bdds.T;
-		for (let b = 0; b != bits; ++b) {
-			elem = bdd.bdd_and(elem, bdd.from_bit(BIT(i, j, b), k & (1 << b)));
-		}
-		rng = bdd.bdd_or(rng, elem);
-	}
-	return rng;
-}
-
-function from_term(bdd, i, s, bits, ar, v, r, m) {
-	const BIT = (term, arg, b) => (term*ar+arg)*bits+b;
-	let b = bits;
-	v.shift();
-	for (let j = 0; j != v.length; ++j) {
-		if (v[j] < 0) {
-			r.hsym = bdd.bdd_and(r.hsym, get_range(bdd, i , j, s, bits, ar));
-			if (m.hasOwnProperty(v[j])) {
-				while (b-- > 0) {
-					r.hsym = bdd.bdd_and(r.hsym, bdd.from_eq(
-						BIT(i, j, b),
-						BIT(m[v[j]][0], m[v[j]][1], b)));
-				}
-			} else {
-				m[v[j]] = [ i, j ];
-			}
-		} else {
-			while (b-- > 0) {
-				r.h = bdd.bdd_and(r.h, bdd.from_bit(BIT(i, j, b), (v[j] & (1 << b)) > 0));
-			}
-		}
-		b = bits;
-	}
-}
-// a P-DATALOG rule in bdd form
-class rule {
-	// initialize rule
-	constructor(bdd, v, bits, ar, dsz) {
-		this.neg =  false;
-		this.h = bdds.T;   // bdd root
-		this.hsym = bdds.T;
-		this.npos = 0;
-		this.nneg = 0;
-		this.neg = v[0][0] < 0;
-		const m = {};
-		const t = [];
-		for (let i = 1; i != v.length; ++i) { if (v[i][0] > 0) { ++this.npos; t.push(v[i].slice()); } }
-		for (let i = 1; i != v.length; ++i) { if (v[i][0] < 0) { ++this.nneg; t.push(v[i].slice()); } }
-		t.push(v[0].slice());
-		v = t;
-		for (let i = 0; i != v.length; ++i) {
-			from_term(bdd, i, dsz, bits, ar, v[i], this, m);
-		}
-		if (v.length == 1) {
-			this.h = bdd.bdd_and(this.h, this.hsym);
-		}
-	}
-
-	step(p) {
-		p.dbs.setpow(p.db, this.npos, this.nneg, p.maxw, 0);
-		const x = bdds.apply_and(p.dbs, p.db, p.prog, this.h);
-		const y = p.prog.bdd_and(x, this.hsym);
-		const z = p.prog.delhead(y, (this.npos + this.nneg) * p.bits * p.ar);
-		p.dbs.setpow(p.db, 1, 0, p.maxw, 0);
-		return z;
-	}
-}
-
-// [pfp] logic program
-class lp {
+class driver {
 	constructor() {
-		this._id = ++_counters.lp;
-		// holds its own dict so we can determine the universe size
 		this.d = new dict();
-		this.dbs = null;     // db bdd (as db has virtual power)
-		this.prog = null;    // prog bdd
-		this.db = bdds.F;    // db's bdd root
-		this.rules = [];     // p-datalog rules
-		this.ar = 0;         // arity
-		this.maxw = 0;       // number of bodies in db
-		this.bits = 0;       // bitsize
+		this.p = null;
+	}
+	get db() { return this.p.getdb(); }
+	printdb(os) {
+		os = os || '';
+		const vs = this.db;
+		const s = [];
+		for (let i = 0; i < vs.length; i++) {
+			const v = vs[i];
+			let ss = '';
+			for (let j = 0; j < v.length; j++) {
+				const k = v[j];
+				if (k === dict.pad) ;
+				else if (k < this.d.nsyms) ss += this.d.get(k) + ' ';
+				else ss += '[' + k + '] ';
+			}
+			s.push(ss.slice(0, -1) + '.');
+		}
+		os += s.sort().join(`\n`);
+		return os;
+	}
+	toString() { return this.printdb(); }
+	pfp() {
+		const r = this.p.pfp();
+		console.log(this.printdb());
+		return r;
 	}
 	// parse a string and returns its dict id
 	str_read(s) {
@@ -762,97 +699,29 @@ class lp {
 	// parses prog
 	prog_read(prog) {
 		const s   = { s: prog }; // source into string to parse
-		this.ar   = 0;           // arity
-		this.maxw = 0;           // number of rules
-		this.db   = bdds.F;      // set db root to 0
+		let ar    = 0;           // arity
 		let l, r  = [];          // length and rules
 
 		for (let t; !((t = this.rule_read(s)).length === 0); r.push(t)) {
 			let i = 0;
 			for (let x = t[0]; i < t.length; x = t[++i]) {
-				this.ar = Math.max(this.ar, x.length - 1);
+				ar = Math.max(ar, x.length - 1);
 			}
-			this.maxw = Math.max(this.maxw, t.length - 1);
 		}
-		for (let i = 0; i < r.length; i++) {
+		this.p = new lp(this.d.bits, ar, this.d.nsyms);
+		for (let i = r.length-1; i >= 0; i--) {
 			for (let j = 0; j < r[i].length; j++) {
 				l = r[i][j].length;
-				if (l < (this.ar+1)) {
-					r[i][j] = r[i][j]
-						.concat(Array(this.ar + 1 - l).fill(dict.pad));
+				if (l < ar+1) {
+					r[i][j] = r[i][j].concat(Array(ar + 1 - l).fill(dict.pad));
 				}
 			}
+			this.p.rule_add(r[i]);
 		}
-
-		this.bits = this.d.bits;
-		this.dbs = new bdds(this.ar * this.bits);
-		this.prog = new bdds((this.maxw + 1) * this.ar * this.bits);
-
-		for (let i = 0; i < r.length; i++) {
-			const x = JSON.parse(JSON.stringify(r[i])); // clone through JSON
-			if (x.length === 1) {
-				this.db = this.dbs.bdd_or(this.db,
-					new rule(this.dbs, x, this.bits, this.ar, this.d.nsyms).h);
-			} else {
-				this.rules.push(
-					new rule(this.prog, x, this.bits, this.ar, this.d.nsyms));
-			}
-		}
-
-
 		return r; // return raw rules/facts;
 	}
-	// single pfp step
-	step() {
-		let add = bdds.F;
-		let del = bdds.F;
-		for (let i = 0; i < this.rules.length; i++) {
-			const r = this.rules[i];
-			const x = r.step(this);
-			this.prog.setpow(x, 1, 0, 1, -(r.npos + r.nneg) * this.bits * this.ar);
-			const t = bdds.apply_or(this.prog, x, this.dbs, r.neg ? del : add);
-			if (r.neg) { del = t; } else { add = t; }
-			this.prog.setpow(x, 1, 0, 1, 0);
-			this.dbs.memos_clear();
-			this.prog.memos_clear();
-		}
-		let s = this.dbs.bdd_and_not(add, del);
-		if (s === bdds.F && add !== bdds.F) {
-			this.db = bdds.F; // detect contradiction
-		} else {
-			this.db = this.dbs.bdd_or(this.dbs.bdd_and_not(this.db, del), s);
-		}
-	}
-	// pfp logic
-	pfp() {
-		let d;                       // current db root
-		let t = 0;                   // step counter
-		const s = [];                // db roots of previous steps
-		do {
-			d = this.db;         // get current db root
-			s.push(d);           // store current db root into steps
-			this.step();         // do pfp step
-			// if db root already resulted from previous step
-			if (s.includes(this.db)) {
-				// this.printdb();
-				// return true(sat) or false(unsat)
-				return d === this.db;
-			}
-		} while (true);
-	}
-	// prints db (bdd -> tml facts)
-	printdb(os) {
-		console.log(out(os, this.dbs, this.db, this.bits, this.ar, this.dbs.pdim+this.dbs.ndim, this.d));
-		if (!os) {
-			const o = { dot: true, svg: false };
-			// bdd_out(this.dbs, this.d, o);
-			// bdd_out(this.prog, this.d, o);
-		}
-	}
-	toString() {
-		return out('', this.dbs, this.db, this.bits, this.ar, this.dbs.pdim+this.dbs.ndim, this.d);
-	}
 }
+
 // removes comments
 function string_read_text(data) {
 	let s = '', skip = false;
@@ -864,65 +733,6 @@ function string_read_text(data) {
 	}
 	return s;
 }
-// output content (TML facts) from the db
-function out(os, b, db, bits, ar, w, d) {
-	os = os || '';
-	const t = b.from_bits(db, bits, ar, w);
-	const s = [];
-	for (let i = 0; i < t.length; i++) {
-		const v = t[i];
-		let ss = '';
-		for (let j = 0; j < v.length; j++) {
-			const k = v[j];
-			if (k === 0) ss += '* ';
-			else if (k < d.nsyms) ss += d.get(k) + ' ';
-			else ss += `[${k}]`;
-		}
-		s.push(ss.slice(0, -1) + '.');
-	}
-	os += s.sort().join(`\n`);
-	return os;
-}
-
-module.exports = (o = {}) => {
-	options.recursive = o.hasOwnProperty('recursive')
-		? o.recursive
-		: options.recursive;
-	// load rec or non_rec version of bdds class
-	bdds = require('./bdds')(options);
-	lp.bdds = bdds;
-	lp.dict = dict;
-	lp.rule = rule;
-	lp.options = options
-	lp.string_read_text = string_read_text;
-	lp.out = out;
-	return lp;
-}
-
-},{"./bdds":1}],4:[function(require,module,exports){
-(function (process){
-// LICENSE
-// This software is free for use and redistribution while including this
-// license notice, unless:
-// 1. is used for commercial or non-personal purposes, or
-// 2. used for a product which includes or associated with a blockchain or other
-// decentralized database technology, or
-// 3. used for a product which includes or associated with the issuance or use
-// of cryptographic or electronic currencies/coins/tokens.
-// On all of the mentioned cases, an explicit and written permission is required
-// from the Author (Ohad Asor).
-// Contact ohad@idni.org for requesting a permission. This license may be
-// modified over time by the Author.
-// Author of the Javascript rewrite: Tomáš Klapka <tomas@klapka.cz>
-
-"use strict";
-
-// DEFAULT OPTIONS
-const options = {
-	recursive: true, // set to false to use bdds_non_rec
-}
-
-const lp = require("./lp")(options);
 
 // loads string from stream
 function load_stream(stream) {
@@ -950,36 +760,269 @@ async function main() {
 	if (s === null) {
 		try {
 			process.stdin.setEncoding('utf8');
-			s = lp.string_read_text(await load_stream(process.stdin));
+			s = string_read_text(await load_stream(process.stdin));
 		} catch (err) {   // stdin read error
 			console.log('Read error:', err);
 			return 4;
 		}
 	}
-	const p = new lp(); // p = logic program
+	const d = new driver();
 	try {
-		p.prog_read(s); // parse source from s
+		d.prog_read(s); // parse source from s
 	} catch (err) {
 		console.log('Parse error:', err);
 		return 3;
 	}
 	let r = false;
 	try {
-		r = p.pfp();    // run pfp logic program
+		r = d.pfp();    // run pfp logic program
 	} catch (err) {
 		console.log('PFP error', err);
 		return 2;
 	}
-	console.log(r ? p.toString() : 'unsat');
-
-	return r ? 0 : 1;
+	if (!r) {
+		console.log('unsat');
+		return 1;
+	}
+	return 0;
 }
 
-module.exports = { lp, main };
+module.exports = { driver, string_read_text, load_stream, main };
 
 }).call(this,require('_process'))
 
-},{"./lp":3,"_process":5}],5:[function(require,module,exports){
+},{"./lp":3,"_process":4}],3:[function(require,module,exports){
+// LICENSE
+// This software is free for use and redistribution while including this
+// license notice, unless:
+// 1. is used for commercial or non-personal purposes, or
+// 2. used for a product which includes or associated with a blockchain or other
+// decentralized database technology, or
+// 3. used for a product which includes or associated with the issuance or use
+// of cryptographic or electronic currencies/coins/tokens.
+// On all of the mentioned cases, an explicit and written permission is required
+// from the Author (Ohad Asor).
+// Contact ohad@idni.org for requesting a permission. This license may be
+// modified over time by the Author.
+// Author of the Javascript rewrite: Tomáš Klapka <tomas@klapka.cz>
+
+"use strict";
+
+const { bdds } = require('./bdds')();
+
+// debug functions
+
+// internal counter for lps (lp._id)
+const _counters = { lp: 0 };
+
+// a P-DATALOG rule in bdd form
+class rule {
+
+	from_int(x, bits, offset) {
+		let r = bdds.T;
+		let b = bits--;
+		while (b--) r = this.bdds.and(r, this.bdds.from_bit(bits - b + offset, x & (1 << b)));
+		return r;
+	}
+
+	from_range(max, bits, offset) {
+		let x = bdds.F;
+		for (let n = 1; n < max; ++n) {
+			x = this.bdds.or(x, this.from_int(n, bits, offset));
+		}
+		return x;
+	}
+
+	// initialize rule
+	constructor(bdb, v, bits, dsz) {
+		this.bdds = bdb;
+		this.neg  = false;
+		this.hsym = bdds.T;
+		this.npos = 0;
+		this.nneg = 0;
+		this.sels = [];
+		this.bd = [];
+		const ar = v[0].length - 1;
+		const t = [ v[0].slice() ];
+		for (let i = 1; i != v.length; ++i) { if (v[i][0] > 0) { ++this.npos; t.push(v[i].slice()); } }
+		for (let i = 1; i != v.length; ++i) { if (v[i][0] < 0) { ++this.nneg; t.push(v[i].slice()); } }
+		v = t;
+		this.neg = v[0][0] < 0;
+		const vars = [];
+		for (let i = 0; i != v.length; ++i) {
+			const x = v[i];
+			x.shift();
+			for (let j = 0; j != x.length; ++j) {
+				const y = x[j];
+				if (y < 0 && !vars.includes(y)) {
+					vars.push(y);
+				}
+			}
+		}
+		const nvars = vars.length;
+		let m = {};
+		for (let i = 1; i != v.length; ++i) {
+			const d = {
+				sel: bdds.T,
+				perm: [],
+				ex: []
+			};
+			d.ex = new Array(bits*ar).fill(0);
+			d.perm = new Array((ar + nvars) * bits);
+			for (let b = 0; b != (ar + nvars) * bits; ++b) {
+				d.perm[b] = b;
+			}
+			for (let j = 0; j != ar; ++j) {
+				if (v[i][j] >= 0) {
+					d.sel = this.bdds.and(d.sel, this.from_int(v[i][j], bits, j * bits));
+					for (let b = 0; b != bits; ++b) {
+						d.ex[b+j*bits] = true;
+					}
+				} else {
+					if (m.hasOwnProperty(v[i][j])) {
+						for (let b = 0; b != bits; ++b) {
+							d.ex[b+j*bits] = true;
+							d.sel = this.bdds.and(d.sel, this.bdds.from_eq(b+j*bits, b+m[v[i][j]]*bits));
+						}
+					} else {
+						m[v[i][j]] = j;
+						d.sel = this.bdds.and(d.sel, this.from_range(dsz, bits, j * bits));
+					}
+				}
+			}
+			m = {};
+			this.bd.push(d);
+		}
+		for (let j = 0; j != ar; ++j) {
+			if (v[0][j] >= 0) {
+				this.hsym = this.bdds.and(this.hsym, this.from_int(v[0][j], bits, j * bits));
+			} else {
+				if (m.hasOwnProperty(v[0][j])) {
+					for (let b = 0; b != bits; ++b) {
+						this.hsym = this.bdds.and(this.hsym, this.bdds.from_eq(b+j*bits, b+m[v[0][j]]*bits));
+					}
+				} else {
+					m[v[0][j]] = j;
+				}
+			}
+		}
+		let k = ar;
+		for (let i = 0; i != v.length-1; ++i) {
+			for (let j = 0; j != ar; ++j) {
+				if (v[i+1][j] < 0) {
+					if (!m.hasOwnProperty(v[i+1][j])) {
+						m[v[i+1][j]] = k++;
+					}
+					for (let b = 0; b != bits; ++b) {
+						this.bd[i].perm[b+j*bits]=b+m[v[i+1][j]]*bits;
+					}
+				}
+			}
+		}
+		if (v.length > 1) {
+			this.sels = new Array(v.length-1);
+		}
+	}
+
+	step(db, bits, ar) {
+		let n = 0;
+		for (; n != this.npos; ++n) {
+			this.sels[n] = this.bdds.and_ex(this.bd[n].sel, db, this.bd[n].ex);
+			if (bdds.F === this.sels[n]) return bdds.F;
+		}
+		for (; n != this.nneg+this.npos; ++n) {
+			this.sels[n] = this.bdds.and_not_ex(this.bd[n].sel, db, this.bd[n].ex);
+			if (bdds.F === this.sels[n]) return bdds.F;
+		}
+		let vars = bdds.T;
+		for (n = 0; n != this.bd.length; ++n) {
+			const p = this.bdds.permute(this.sels[n], this.bd[n].perm);
+			vars = this.bdds.and(vars, p);
+			if (bdds.F === vars) return bdds.F;
+		}
+		return this.bdds.and_deltail(this.hsym, vars, bits*ar);
+	}
+}
+
+// [pfp] logic program
+class lp {
+	constructor(maxbits, arity, dsz) {
+		this._id = ++_counters.lp;
+		// holds its own dict so we can determine the universe size
+		this.bdds = new bdds();
+		this.db = bdds.F;
+		this.rules = [];     // p-datalog rules
+		this.ar = arity;
+		this.dsz = dsz;
+		this.bits = maxbits;
+	}
+	getdb() { return this.from_bits(this.db); }
+	// single pfp step
+	rule_add(x) {
+		const r = new rule(this.bdds, x, this.bits, this.dsz);
+		if (x.length === 1) {
+			this.db = this.bdds.or(this.db, r.hsym); // fact
+		} else {
+			this.rules.push(r);
+		}
+	}
+	step() {
+		let add = bdds.F;
+		let del = bdds.F;
+		for (let i = 0; i < this.rules.length; i++) {
+			const r = this.rules[i];
+			const t = this.bdds.or(r.step(this.db, this.bits, this.ar), r.neg ? del : add);
+			if (r.neg) { del = t; } else { add = t; }
+		}
+		let s = this.bdds.and_not(add, del);
+		if (s === bdds.F && add !== bdds.F) {
+			this.db = bdds.F; // detect contradiction
+		} else {
+			this.db = this.bdds.or(this.bdds.and_not(this.db, del), s);
+		}
+	}
+	// pfp logic
+	pfp() {
+		let d;                       // current db root
+		let t = 0;                   // step counter
+		const s = [];                // db roots of previous steps
+		do {
+			d = this.db;         // get current db root
+			s.push(d);           // store current db root into steps
+			this.step();         // do pfp step
+			// if db root already resulted from previous step
+			if (s.includes(this.db)) {
+				return d === this.db;
+			}
+		} while (true);
+	}
+
+	from_bits(x) {
+		const s = this.bdds.allsat(x, this.bits * this.ar);
+		const r = Array(s.length);
+		for (let k = 0; k < r.length; k++) {
+			r[k] = Array(this.ar).fill(0);
+		}
+		let n = s.length;
+		while (n--) {
+			for (let i = 0; i != this.ar; ++i) {
+				for (let b = 0; b != this.bits; ++b) {
+					if (s[n][i * this.bits + b] > 0) {
+						r[n][i] |= 1 << (this.bits - b - 1);
+					}
+				}
+			}
+		}
+		return r;
+	}
+}
+
+module.exports = () => {
+	lp.rule = rule;
+	return lp;
+}
+
+},{"./bdds":1}],4:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -1168,7 +1211,7 @@ process.umask = function() { return 0; };
 },{}],"tml":[function(require,module,exports){
 "use strict";
 
-module.exports = require('./build/tml.js');
+module.exports = require('./build/driver.js');
 
-},{"./build/tml.js":4}]},{},[])
+},{"./build/driver.js":2}]},{},[])
 //# sourceMappingURL=tml.js.map.js
