@@ -1,4 +1,4 @@
-Online TML playground using [tml.js](https://gitlab.com/tomasklapka/tml.js).
+Online TML playground using [tml.js](https://github.com/tomasklapka/tml.js).
 
 See https://github.com/IDNI/tau for more information.
 
