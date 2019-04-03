@@ -1,0 +1,13 @@
+{
+    "plugins": [
+        "lasso-marko"
+    ],
+    "fileWriter": {
+        "outputDir": "dist",
+        "fingerprintsEnabled": false
+    },
+    "minify": false,
+    "resolveCssUrls": true,
+    "bundlingEnabled": false,
+    "bundles": []
+}

@@ -1,0 +1,262 @@
+class {
+	onCreate() {
+		this.examples = require('./examples');
+		this.status = require('./status').status;
+		this.driver_class = require('./driver');
+		this.editor = null;
+		this.driver = null;
+		this.last_output = 0;
+		this.state = {
+			sel: 'codeflask1', // editor DOM id
+			status: status.init,
+			step: 0, // current step
+			changed: false, // indicates source change by '*' at status
+			autorun: true,
+			sort: true,
+			tabular: true, // tabular vs normal (facts) output
+			debug: false, // enable by clicking on 'd' in 'nodes'
+			examples: false, // show examples menu
+			settings: false, // show settings menu
+			stepsbar: false, // show steps bar
+			output: '', // content of the output window
+			steps_length: 0, // how many steps to show in stepsbar
+			nodes: 0, // number of nodes in bdd db
+		};
+		this.setStateDirty("steps");
+	}
+	onMount() {
+		this.editor = this.getComponent("editor");
+		const { get_param } = require('./util');
+		const prog = get_param('prog'); // get prog from url
+		if (prog && prog.length > 0)  {
+			this.editor.updateCode(prog);
+			if (this.state.autorun) this.run();
+		} else { // or load example if not in URL
+			const intro = get_param("intro");
+			let example = get_param("example");
+			if (!example && intro) example = this.examples.program_by_intro_id(intro);
+			this.load_example(example || 'intro');
+		}
+	}
+	onEditorUpdate(code) {
+		this.state.changed = true;
+		this.code2url(code);
+		if (this.state.autorun) this.run();
+	}
+	onToolbarAction(action) {
+		return ['run', 'step', 'stop']
+			.includes(action) ? this[action]() : false; }
+	onToggle(prop) {
+		this.state[prop] = !this.state[prop];
+		switch (prop) {
+			case 'sort':
+			case 'tabular': this.output(); break;
+			case 'autorun': if (this.state.autorun) this.run(); break;
+		}
+	}
+	onSelectExample(program) {
+		this.load_example(program);
+		this.home();
+	}
+	onSelectStep(step) {
+		if (step >= 0 && step < this.driver.steps.length)
+			this.output(step);
+	}
+	load_example(e) { // loads example program, if confirmed. autoruns if autorun.
+		let confirmed = true;
+		const code = this.editor.getCode();
+		// if there is a custom program, ask for confirmation before discarding
+		if (code && code.length > 0
+		&& this.examples.find(code) === false) {
+			confirmed = confirmed
+				&& confirm('Do you want to discard your program?');
+		}
+		if (confirmed) {
+			// populate the logic program
+			this.editor.updateCode(this.examples[e]);
+			const {
+				update_location_url, get_title, get_link_with_updated_search
+			} = require('./util');
+			update_location_url(get_title(), get_link_with_updated_search('example='+e));
+			this.load_input();
+			if (this.state.autorun) this.run();
+		}
+	}
+	load_input() { // starts TML's driver with code from editor
+		try {
+			let source = this.editor.getCode();
+			this.driver_class.bdd.reset();
+			this.driver = new this.driver_class(source);
+			this.state.step = 0;
+			this.state.status = this.status.loaded;
+			this.state.changed = false;
+		} catch (err) { // parse error
+			this.state.output = `${err}`;
+			this.state.status = this.status.error
+		}
+	}
+	output(step) { // outputs db state for any step
+		if (step === undefined) step = this.last_output;
+		this.last_output = step;
+		if (!this.driver.prog) return;
+		if (this.state.tabular) { // tabular
+			const facts = this.driver.steps_raw[step];
+			const relations = {};
+			const arities = {};
+			let max_arity = 0;
+			for (let i = 0; i !== facts.length; ++i) {
+				const f = facts[i].slice();
+				const rel = this.driver.d.get_by_int(f.shift());
+				relations[rel] = relations[rel] || [];
+				arities[rel] = Math.max(arities[rel] || 0, f.filter(i=>i>0).length)
+				max_arity = Math.max(max_arity, arities[rel]);
+				if (f.length > 0 && f.some(el=>el!==0)) {
+					relations[rel].push(f.map(i => i===0?'*':this.driver.d.get_by_int(i)));
+				}
+			}
+			if (this.state.sort) {
+				for (let rel in relations) {
+					const r = relations[rel];
+					for (let n = arities[rel]; n !== -1; --n) {
+						function sort_by_column(a, b) { a = a[n]; b = b[n]; return (a===b)? 0: (a<b)?-1:1; }
+						relations[rel] = relations[rel].sort(sort_by_column);
+					}
+				}
+			}
+			this.state.output = { relations, arities, max_arity, nrels: Object.keys(relations).length };
+			return;
+		}
+		// normal output (non-tabular facts)
+		this.state.output = this.driver.steps[step];
+		// it's already sorted so we don't need
+		// this: if (this.state.sort) { this.state.output = this.state.output.split(/\n/).sort().join(`\n`); }
+	}
+	run() { // runs inf. steps of TML
+		return this.step(0);
+	}
+	step(n = 1) { // does n steps of TML. reloads code if necessary. true unless err/unsat/contr.
+		if (this.state.changed || (!this.is_running() && !this.is_loaded())) { this.load_input(); }
+		if (!this.is_running() && !this.is_loaded()) { return false; }
+		this.state.status = this.status.running;
+		this.state.status = this.driver.pfp_step(n);
+		this.state.steps_length = this.driver.steps.length;
+		this.state.step = this.driver.step;
+		this.state.nodes = this.driver.bdd.V.length;
+		this.output(this.state.step);
+		if (this.is_error() || this.is_unsat() || this.is_contradiction()) {
+			return false;
+		}
+		return true;
+	}
+	stop() { // changes state to stopped => following step/run will reload/rerun.
+		this.state.status = this.status.stopped;
+		return true;
+	}
+	home() { // close settings and/or examples menu
+		this.state.settings = false;
+		this.state.examples = false;
+	}
+	examples_menu() { // open examples menu (close settings)
+		if (this.state.examples) { // close if opened
+			this.state.examples = false; return; }
+		this.state.settings = false;
+		this.state.examples = true;
+	}
+	settings_menu() { // open settings menu (close examples)
+		if (this.state.settings) { // close if opened
+			this.state.settings = false; return; }
+		this.state.examples = false;
+		this.state.settings = true;
+	}
+	share() { // offer to duplicate page in new window or ctrl-c url
+		const { get_link } = require('./util');
+		const link = prompt(`Open URL in new window?\n` +
+		`Or copy to clipboard and cancel.`, get_link());
+		if (link != null) {
+			window.open(link, '_blank');
+		}
+		return false;
+	}
+	code2url(code) {
+		const {
+			add_trailing_nl,
+			get_title,
+			get_link_with_updated_search,
+			update_location_url
+		} = require('./util');
+		const example_name = this.examples.find(code);
+		const search = example_name === false // no example in editor
+			? 'prog=' +
+				encodeURIComponent(add_trailing_nl(code))
+				.replace(/%20/g, '+') // post-encode spaces as pluses
+			: `example=${example_name}`;
+		const url = get_link_with_updated_search(search)
+		update_location_url(get_title(), url);
+		return url;
+	}
+	is_init()          { return this.state.status === this.status.init; }
+	is_error()         { return this.state.status === this.status.error; }
+	is_loaded()        { return this.state.status === this.status.loaded; }
+	is_running()       { return this.state.status === this.status.running; }
+	is_stopped()       { return this.state.status === this.status.stopped; }
+	is_finished()      { return this.state.status === this.status.finished; }
+	is_unsat()         { return this.state.status === this.status.unsat; }
+	is_contradiction() { return this.state.status === this.status.contradiction; }
+}
+
+style {
+	nav.menu {
+		text-align: center;
+		width: 100%;
+		padding: 0.5em 0;
+	}
+	nav.menu div.link {
+		display: inline-block;
+		padding: 0.5em 1em;
+	}
+	div.editor-box {
+		border: 1px solid black;
+		background: #15212d;
+	}
+	div.debug {
+		width: 15em; position: absolute;
+		top: 0; left: 0; z-index: 100;
+		background: black; color: white;
+	}
+	/* share symbol for fun from https://stackoverflow.com/a/23358665 TODO: replace with svg/png icon */
+	.share { font-weight: bold; position: relative; }
+	.share::before { content: "."; font-size: 2.2em; position: absolute; bottom: -2.5px; left: -4px; }
+	.share::after { content: ":"; font-size: 2em; position: absolute; bottom: -7px; right: -7px; }
+}
+
+nav.menu
+	div.link on-click("settings_menu") -- settings
+	div.link on-click("examples_menu") -- examples
+	div.link on-click("share")
+		span.share -- &lt;
+
+if(state.examples)
+	examples on-example("onSelectExample") on-close("home")
+
+if(state.settings)
+	settings autorun=state.autorun tabular=state.tabular sort=state.sort on-toggle("onToggle") on-close("home")
+
+div.editor-box
+	editor key="editor" sel=state.sel on-editor-update("onEditorUpdate")
+	statusbar key="statusbar" status=state.status step=state.step changed=state.changed nodes=state.nodes on-toggle("onToggle")
+	toolbar key="toolbar" on-action("onToolbarAction") on-toggle("onToggle")
+	if(state.stepsbar)
+		stepsbar steps=state.steps_length-1 on-step("onSelectStep")
+	output tabular=state.tabular output=state.output
+
+if(state.debug)
+	div.debug
+		p on-click(()=>{ state.debug = !state.debug; component.forceUpdate()  })
+			toggleswitch value=state.debug -- debug
+		p on-click("onToggle", "autorun")
+			toggleswitch value=state.autorun -- autorun
+		p on-click("onToggle", "sort")
+			toggleswitch value=state.sort -- sort
+		p on-click("onToggle", "tabular")
+			toggleswitch value=state.tabular -- tabular
+		pre -- ${JSON.stringify(state, null, 2)}

@@ -1,10 +1,26 @@
-const intros = {
-	// if is intro in text, return it's index, otherwise return -1
-	find_intro: (text) => { return intros.programs.indexOf(text); }
-}
-module.exports = intros;
-intros.programs = [
-// intro
+const examples = {
+	find: text => {
+		for (let program of examples.programs) {
+			if (text === examples[program]) return program;
+		}
+		return false;
+	},
+
+	programs: [
+		'intro', 'FACTS', 'RELATIONS', 'ARITY', 'RULES', 'VARIABLES',
+		'AND/OR', 'RECURSION', 'TRANSITIVE CLOSURE', 'NEGATION', 'DELETION',
+		'UNSAT', 'family', 'armageddon'
+	],
+
+	// backward compatibility (keep the old ordering)
+	intros: [
+		'intro', 'FACTS', 'RELATIONS', 'ARITY', 'RULES', 'VARIABLES',
+		'AND/OR', 'RECURSION', 'TRANSITIVE CLOSURE', 'NEGATION', 'DELETION',
+		'family', 'armageddon', 'UNSAT'
+	],
+	program_by_intro_id: n => examples.intros[n],
+
+	intro:
 `# Enter your TML logic program here and
 # press RUN to execute.
 #
@@ -17,7 +33,8 @@ intros.programs = [
 # Clauses can be either FACTS or RULES and
 # they are terminated by the '.' character
 # like sentences in English.`,
-// FACTS
+
+	FACTS:
 `# Facts define RELATIONS between entities.
 # Fact clauses are considered to be true.
 
@@ -32,7 +49,8 @@ beginsWithJ Joe.  # Joe begins with J.
 
 # Output is padded by '*' character when
 # different ARITIES are used.`,
-// RELATIONS
+
+	RELATIONS:
 `# Every FACT begins with a predicate,
 # which is also the name of a relation.
 #
@@ -69,7 +87,8 @@ employee Jane Doe support.
 # databases where columns are named.
 #
 # Number of columns is also called ARITY.`,
-// ARITY
+
+	ARITY:
 `# Every clause has its arity. It's a dimension
 # of the domain in the corresponding Cartesian
 # product.
@@ -104,7 +123,8 @@ a 1 2 3 4 5 6.
 
 # Output of TML is padded by '*' character
 # up to the highest known arity.`,
-// RULES
+
+	RULES:
 `# Rules allow creation/inferring of new facts.
 # Every rule has a head and a body separated by
 # ':-' symbol. Head is on the left side and body
@@ -149,7 +169,8 @@ salutation Suzi Madam :- employee Suzi female.
 
 # Rules become more powerful when used with
 # VARIABLES.`,
-// VARIABLES
+
+	VARIABLES:
 `# Variables are used for substitution of
 # multiple possible entities in rules.
 # If a variable is substituted by an entity
@@ -202,7 +223,8 @@ mother Suzi John.
 bird John.
 
 # TML infers that John beeps and he can fly.`,
-// AND/OR
+
+	'AND/OR':
 `# When you need multiple conditions in a body
 # separate them by a comma. You can read comma
 # as 'and':
@@ -236,7 +258,8 @@ female Suzi.
 # Jane and Suzi are girls.
 # And Amy, Jack, Jane, John and Suzi are
 # humans.`,
-// RECURSION
+
+	RECURSION:
 `# Recursion is used to traverse through
 # all the entities in a relation.
 # It's a logic programs' alternative to loops.
@@ -268,7 +291,8 @@ ancestor ?anc ?desc :-
 
 # Notice how ancestor relation is used in both
 # head and body. This is causing the recursion.`,
-// TRANSITIVE CLOSURE
+
+	'TRANSITIVE CLOSURE':
 `# Transitive closure (TC)
 #
 # TC of a directed graph is simply another
@@ -297,7 +321,8 @@ tc ?x ?y :- tc ?x ?z, e ?z ?y.
 
 # TML infers all the possible paths in the
 # 'e' graph into 'tc' graph.`,
-// NEGATION
+
+	NEGATION:
 `# Negation
 #
 # For negation is used a '~' character.
@@ -315,7 +340,8 @@ canFly ?X :- bird ?X, ~wounded ?X.
 # Coco and Charlie are birds but Charlie is
 # wounded. The only fact TML can infer here
 # is that Coco can fly.`,
-// DELETION
+
+	DELETION:
 `# Negation in heads deletes the fact from
 # the database of facts.
 
@@ -354,9 +380,9 @@ done :- notdone.
 
 # if done, then remove notdone fact to
 # stop the TC
-~notdone :- done.
-`,
-// family
+~notdone :- done.`,
+
+	family:
 `father Tom Amy.
 father Jack Fred.
 father Tony CarolII.
@@ -375,7 +401,8 @@ ancestor ?X ?Y :- parent ?X ?Z, ancestor ?Z ?Y.
 # This example is taken
 # from Datalog Educational System
 # http://des.sourceforge.net/`,
-// armageddon
+
+	armageddon:
 `# There are birds Charlie and Coco
 bird Charlie.
 bird Coco.
@@ -405,7 +432,8 @@ dead ?x :- mortal ?x, armageddon.
 ~human ?x :- dead ?x.
 ~mortal ?x :- dead ?x.
 ~being ?x :- dead ?x.`,
-// UNSAT
+
+	UNSAT:
 `# Following program does 6 steps and returns
 # to the state where it initially started.
 #
@@ -421,4 +449,5 @@ stop :- running.
 start :- stop.
 ~stop :- start.
 `
-];
+};
+module.exports = examples;

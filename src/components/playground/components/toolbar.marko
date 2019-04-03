@@ -1,0 +1,27 @@
+style {
+	.toolbar {
+		width: 100%;
+		padding: 0.5em 0;
+		color: #969a9d;
+		background: #1f232c;
+		border-top: 1px solid black;
+	}
+	.toolbar-in {
+		width: 16em;
+		margin: 0 auto;
+	}
+	.toolbar-in::after { content: ""; clear: both; display: table; }
+	.toolbar-in .button {
+		width: 3em;
+		float: left;
+		text-align: center;
+		cursor: pointer;
+	}
+}
+
+div.toolbar
+	div.toolbar-in
+		div.run.button   title="run program"  on-click(()=>component.emit('action', 'run')) -- &#9654;
+		div.step.button  title="do a step"    on-click(()=>component.emit('action', 'step')) -- &#9654;&#9646;
+		div.stop.button  title="stop running" on-click(()=>component.emit('action', 'stop')) class="disabled-button" -- &#9724;
+		div.other.button title="toggle steps" on-click(()=>component.emit('toggle', 'stepsbar')) -- &#8230;

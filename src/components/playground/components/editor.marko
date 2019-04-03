@@ -1,0 +1,63 @@
+style {
+	.codeflask {
+		position: relative!Important;
+		width: 100%!Important;
+		height: 400px!Important;
+	}
+	.codeflask-wrapper { width: 100%; }
+	.codeflask-wrapper,
+	.codeflask,
+	.codeflask__textarea {
+		background: #15212d!Important; color: #65717d!Important;
+		caret-color: white!Important;
+	}
+	.codeflask__flatten {
+		width: calc(100% - 20px)!Important;
+		left: 20px!Important;
+	}
+	.codeflask__lines {
+		color: #555566!Important;
+		padding: 8px 0px!Important;
+		width: 20px!Important;
+	}
+	.codeflask.codeflask--has-line-numbers::before {
+		background: #15212d!Important;
+	}
+	.codeflask .token.comment { color: #808080; }
+	.codeflask .token.head { color: #ad4; }
+	.codeflask .token.nhead { color: #c11; }
+	.codeflask .token.body { color: #f94; }
+	.codeflask .token.fact { color: #23abcd; }
+	.codeflask .token.string { color: pink; }
+	.codeflask .token.directive { color: cyan; }
+	.codeflask .token.variable { text-decoration: underline; }
+	.codeflask .token.null,
+	.codeflask .token.char,
+	.codeflask .token.number { font-weight: bold; color: inherit; }
+	.codeflask .token.punctuation { font-weight: bold; color: white!Important; }
+	.codeflask .token.parens { color: #606060; }
+}
+
+class {
+	onCreate(input) {
+		this.sel = '#'+input.sel;
+		this.tml = require('../prism-tml' );
+	}
+	onMount() {
+		const CodeFlask = require('codeflask');
+		const flask = new CodeFlask(this.sel, { language: 'tml', lineNumbers: true, defaultTheme: false });
+		flask.addLanguage('tml', this.tml);
+		flask.onUpdate((code) => { this.emit("editor-update", code); });
+		this.flask = flask;
+	}
+	getCode() {
+		return this.flask.getCode();
+	}
+	updateCode(code) {
+		return this.flask.updateCode(code);
+	}
+}
+
+div.codeflask-wrapper
+	div.codeflask id=`${input.sel}`
+		<${input.renderBody}/>

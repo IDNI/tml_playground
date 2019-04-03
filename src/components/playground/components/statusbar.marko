@@ -1,0 +1,39 @@
+class {
+	status_name(status) {
+		this.status_names = this.status_names || require('../status').status_name;
+		return this.status_names[status];
+	}
+}
+
+style {
+	.statusbar {
+		width: 100%;
+		padding: 0.3em 0.5em;
+		color: #969a9d;
+		background: #1f232c;
+		border-top: 1px solid black;
+	}
+	.statusbar-in {
+		margin: 0 auto;
+		text-align: center;
+	}
+	.statusbar-in span.running { color: #008000; }
+	.statusbar-in span.unsat,
+	.statusbar-in span.contradiction,
+	.statusbar-in span.error { color: #ff0000; }
+	.statusbar-in span.finished { color: #008000; }
+}
+
+div.statusbar
+	div.statusbar-in
+		strong -- step:&nbsp;
+		-- ${input.step}
+		strong -- &nbsp;&nbsp;${' '}status:&nbsp;
+		span class=`${component.status_name(input.status)}`
+			-- ${component.status_name(input.status)}
+		if(input.changed) -- *
+		strong
+			-- &nbsp;&nbsp;${' '}no
+			span on-click(()=>component.emit("toggle", "debug")) -- d
+			-- es:&nbsp;
+		-- ${input.nodes}

@@ -5,16 +5,20 @@
   "main": "app/index.html",
   "license": "SEE LICENSE",
   "scripts": {
-    "watch": "node_modules/.bin/watchify --ignore tml -r ./src/index.js:tml_playground -d -o app/js/tml_playground.wmap.js",
-    "bundle_debug": "mkdir -p app/js && node_modules/.bin/browserify --ignore tml -r ./src/index.js:tml_playground -d > app/js/tml_playground.wmap.js",
-    "bundle": "mkdir -p app/js && node_modules/.bin/browserify --ignore tml -r ./src/index.js:tml_playground > app/js/tml_playground.js",
-    "minify": "node_modules/.bin/terser app/js/tml_playground.js > app/js/tml_playground.min.js",
-    "build": "npm run-script bundle && npm run-script minify",
-    "build_all": "npm run-script build"
+    "build": "cp src/index.html dist/index.html && lasso --main src/index.js --inject-into dist/index.html --config lasso-config.json",
+    "watch": "scripts/watch"
   },
   "devDependencies": {
-    "browserify": "latest",
+    "@lasso/marko-taglib": "latest",
+    "http-server": "latest",
+    "ignoring-watcher": "latest",
+    "lasso-cli": "latest",
+    "lasso-marko": "latest",
+    "marko": "^4.16.7",
     "terser": "latest",
-    "watchify": "latest"
+    "tml.js": "git+https://git@github.com/tomasklapka/tml.js.git"
+  },
+  "dependencies": {
+    "codeflask": "^1.4.0"
   }
 }

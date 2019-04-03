@@ -1,0 +1,20 @@
+#!/bin/env node
+const dir = __dirname+'/../';
+const { exec } = require('child_process');
+const iw = require('ignoring-watcher');
+function restart(event) {
+	console.log(`WATCH: ${event.type}: ${event.path} -> rebuilding...`);
+	return exec('yarn build', (error, stdout, stderr) => {
+		console.log(stdout);
+		if (stderr || error) console.error(stderr || error);
+		console.log(`WATCH: done.\nWATCH: watching...`);
+	});
+}
+const w = iw.createWatcher({
+	dir: dir,
+	ignoreFiles: [ '.gitignore' ],
+	ignoreAlwaysPatterns: [ 'LICENSE', '*.md', '.*', '*.log', '*.lock' ]
+});
+w.on('modified', restart);
+restart({ type: 'start', path: '*' });
+w.startWatching();

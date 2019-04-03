@@ -1,0 +1,19 @@
+style {
+	.example-item {
+		padding: 0.5em 0;
+	}
+	.example-item-span {
+		display: inline-block;
+		width: 15em;
+		padding: 0 1em;
+	}
+}
+
+import examples from '../examples'
+ulpanel on-close(()=>component.emit('close'))
+	for|p| of=examples.programs
+		li on-click(()=>component.emit('example', p))
+			div.example-item
+				-- <>
+				span.example-item-span -- ${p}
+				-- >

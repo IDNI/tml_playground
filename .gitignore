@@ -1,9 +1,22 @@
-.vscode
-node_modules
-app/js
-*.wmap.js
-*.js.map.js
-app/tml.js/tml.debug*
-.nyc_output
-coverage
+# OS
+*.swp
+.DS_Store
 
+# Editor Configs
+.idea
+.vscode
+*.sublime*
+
+# Generated Files
+build
+dist
+.cache
+coverage
+.nyc-output
+*.marko.js
+.marko-cli
+.marko-devtools
+yarn-error.log
+
+# NPM
+node_modules

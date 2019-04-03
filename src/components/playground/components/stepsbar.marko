@@ -1,0 +1,26 @@
+style {
+	.stepsbar {
+		width: 100%;
+		padding: 0.5em 0;
+		color: #969a9d;
+		background: #1f232c;
+		border-top: 1px solid black;
+	}
+	.stepsbar::after { content: ""; clear: both; display: table; }
+	.stepsbar .button {
+		float: left;
+		display: inline-block;
+		padding: 0.3em 0.9em;
+		margin: 0;
+		margin-left: 0.6em;
+		text-align: center;
+		cursor: pointer;
+		background: #969a9d;
+		color: #1f232c;
+	}
+}
+
+div.stepsbar
+	for|n| from=1 to=input.steps>=1?input.steps:1
+		div.button title=`step ${n}` on-click(()=>component.emit('step', n)) -- ${n}
+

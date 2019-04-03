@@ -1,0 +1,63 @@
+style {
+	.output {
+		width: 100%;
+		border-top: 1px solid black;
+		height: 300px;
+		overflow: auto;
+		background: #15212d;
+		color: #23abcd;
+		padding: 0.5em;
+		font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+		font-size: 13px;
+		display: inline-flex;
+		flex-direction: row;
+		flex-wrap: wrap;
+		justify-content: flex-start;
+		align-items: flex-start;
+		align-content: flex-start;
+	}
+	pre { margin: 0; padding: 0; }
+	code { margin: 0; padding: 0; }
+	.relation table,
+	.relation table tr,
+	.relation table td {
+		padding: 0;
+		margin: 0;
+	}
+	.relation table {
+		border-collapse: collapse;
+	}
+	.relation table td,
+	.relation table th {
+		border: 2px solid #1d303f;
+		padding: 0.3em 1em 0em 1em;
+	}
+	div.relation {
+		margin-left: 1em;
+		margin-top: 1em;
+		display: inline-block;
+	}
+}
+div.output
+	if(input.tabular && typeof input.output !== "string")
+		if(input.output.nrels > 0)
+			for|ar| from=0 to=input.output.max_arity step=1
+				for|rel,data| in=input.output.relations
+					if(ar === input.output.arities[rel])
+						div.relation
+							table.relations
+								tr
+									th colspan=input.output.max_arity -- ${rel}
+								if(data.length > 0)
+									$ const pad = input.output.max_arity-ar;
+									$ const l = ar >= 1 ? ar-1 : 0;
+									for|row| of=data
+										tr
+											for|n| from=0 to=l step=1
+												if(n===0 && pad > 1)
+													td colspan=pad -- ${row[n]}
+												else
+													td -- ${row[n]}
+	else
+		pre
+			code -- ${input.output}
