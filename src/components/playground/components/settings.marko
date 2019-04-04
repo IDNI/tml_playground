@@ -1,7 +1,7 @@
 ulpanel on-close(() => component.emit('close'))
-	li on-click(() => component.emit('toggle', 'autorun'))
+	li.link on-click(() => component.emit('toggle', 'autorun'))
 		toggleswitch value=input.autorun -- autorun
-	li on-click(() => component.emit('toggle', 'sort'))
+	li.link on-click(() => component.emit('toggle', 'sort'))
 		toggleswitch value=input.sort -- sort output
-	li on-click(() => component.emit('toggle', 'tabular'))
+	li.link on-click(() => component.emit('toggle', 'tabular'))
 		toggleswitch value=input.tabular -- tabular view

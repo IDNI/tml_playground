@@ -22,7 +22,6 @@ class {
 			steps_length: 0, // how many steps to show in stepsbar
 			nodes: 0, // number of nodes in bdd db
 		};
-		this.setStateDirty("steps");
 	}
 	onMount() {
 		this.editor = this.getComponent("editor");
@@ -251,12 +250,12 @@ div.editor-box
 
 if(state.debug)
 	div.debug
-		p on-click(()=>{ state.debug = !state.debug; component.forceUpdate()  })
+		p.link on-click(()=>{ state.debug = !state.debug; component.forceUpdate()  })
 			toggleswitch value=state.debug -- debug
-		p on-click("onToggle", "autorun")
+		p.link on-click("onToggle", "autorun")
 			toggleswitch value=state.autorun -- autorun
-		p on-click("onToggle", "sort")
+		p.link on-click("onToggle", "sort")
 			toggleswitch value=state.sort -- sort
-		p on-click("onToggle", "tabular")
+		p.link on-click("onToggle", "tabular")
 			toggleswitch value=state.tabular -- tabular
 		pre -- ${JSON.stringify(state, null, 2)}

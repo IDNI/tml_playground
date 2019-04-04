@@ -12,7 +12,7 @@ style {
 import examples from '../examples'
 ulpanel on-close(()=>component.emit('close'))
 	for|p| of=examples.programs
-		li on-click(()=>component.emit('example', p))
+		li.link on-click(()=>component.emit('example', p))
 			div.example-item
 				-- <>
 				span.example-item-span -- ${p}
