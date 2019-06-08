@@ -10,15 +10,14 @@
   },
   "devDependencies": {
     "@lasso/marko-taglib": "latest",
-    "http-server": "latest",
     "ignoring-watcher": "latest",
     "lasso-cli": "latest",
     "lasso-marko": "latest",
-    "marko": "^4.16.7",
+    "marko": "latest",
     "terser": "latest",
     "tml.js": "git+https://git@github.com/tomasklapka/tml.js.git"
   },
   "dependencies": {
-    "codeflask": "^1.4.0"
+    "codeflask": "latest"
   }
 }
